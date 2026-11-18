@@ -1,4 +1,4 @@
-const { redis, makeToken, getUser, hashPw, same, sessionCookie } = require('./_lib');
+const { redis, makeToken, getUser, hashPw, newPw, same, sessionCookie } = require('./_lib');
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -23,6 +23,18 @@ module.exports = async (req, res) => {
       const token = makeToken(username);
       res.setHeader('Set-Cookie', sessionCookie(token));
       return res.json({ user: await getUser({ headers: { cookie: 'sid=' + token } }) });
+    }
+    // Người dùng tự đổi mật khẩu của mình
+    if (action === 'password' && req.method === 'POST') {
+      const me = await getUser(req);
+      if (!me) return res.status(401).json({ error: 'Bạn chưa đăng nhập' });
+      if (me.fixed) return res.status(400).json({ error: 'Admin gốc đổi mật khẩu qua biến môi trường ADMIN_PASSWORD' });
+      const { current = '', next = '' } = req.body || {};
+      if (next.length < 6) return res.status(400).json({ error: 'Mật khẩu mới tối thiểu 6 ký tự' });
+      const rec = await redis.hget('users', me.username);
+      if (!rec || !same(hashPw(current, rec.salt), rec.hash)) return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng' });
+      await redis.hset('users', { [me.username]: { ...newPw(next), role: rec.role } });
+      return res.json({ ok: true });
     }
     res.status(400).json({ error: 'Yêu cầu không hợp lệ' });
   } catch (e) {

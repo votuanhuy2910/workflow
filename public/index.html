@@ -50,43 +50,63 @@ select{font:inherit;padding:5px 8px;border:1px solid var(--bd);border-radius:8px
 .urow{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)}
 .urow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .ro-note{background:var(--acs);color:var(--tx);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px}
+dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);padding:18px;width:min(92vw,380px)}
+dialog.wide{width:min(94vw,640px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg{display:grid;gap:8px}
+.pic{display:block;max-width:100%;max-height:360px;border-radius:8px;margin-top:8px;border:1px solid var(--bd)}
+.thumb{height:48px;border-radius:6px;border:1px solid var(--bd);vertical-align:middle}
+.imgrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btnlike{border:1px solid var(--bd);border-radius:8px;padding:6px 10px;cursor:pointer}
+.title-ro{font-size:20px;margin:0 0 12px}
 </style>
 </head>
 <body>
-<div class="bar"><h1>🎓 Quy trình làm việc đại học</h1><span class="badge ro" id="who">Đang tải…</span><button id="usersBtn" hidden>Phân quyền</button><button id="loginBtn">Đăng nhập</button><button id="logoutBtn" hidden>Đăng xuất</button></div>
-<div class="app" id="loginWrap" hidden style="grid-template-columns:1fr;padding-bottom:0">
-  <form class="card" id="loginForm" style="display:grid;gap:8px;max-width:360px">
-    <strong>Đăng nhập</strong>
-    <input id="lu" placeholder="Tên đăng nhập" autocomplete="username" required>
-    <input id="lp" type="password" placeholder="Mật khẩu" autocomplete="current-password" required>
-    <div class="dg" id="lerr"></div>
-    <div><button class="pri">Đăng nhập</button> <button type="button" id="lcancel">Hủy</button></div>
-  </form>
-</div>
+<div class="bar"><h1>🎓 Quy trình làm việc đại học</h1><span class="badge" id="who" hidden></span>
+  <button id="usersBtn" hidden>Phân quyền</button><button id="pwBtn" hidden>Đổi mật khẩu</button><button id="loginBtn">Đăng nhập</button><button id="logoutBtn" hidden>Đăng xuất</button></div>
 <div class="app">
   <aside class="card">
     <h2>Danh sách quy trình <button class="pri ico" id="addFlow" hidden>+ Mới</button></h2>
     <div id="flows"></div>
-    <div class="mu" id="hint"></div>
+    <div class="mu" id="hint" hidden>Kéo ⠿ để sắp xếp thứ tự quy trình.</div>
   </aside>
   <main class="card" id="main"></main>
 </div>
-<div class="app" id="usersWrap" hidden style="padding-top:0;grid-template-columns:1fr"><section class="card">
-  <h2>Phân quyền người dùng <button class="ico" id="usersClose">Đóng</button></h2>
-  <div class="mu" style="margin-bottom:8px">Viewer: chỉ xem · Editor: thêm/sửa/xóa/kéo thả · Admin: toàn quyền, kể cả quản lý người dùng.</div>
+
+<dialog id="loginDlg"><form class="dlg" id="loginForm">
+  <strong>Đăng nhập</strong>
+  <input id="lu" placeholder="Tên đăng nhập" autocomplete="username" required>
+  <input id="lp" type="password" placeholder="Mật khẩu" autocomplete="current-password" required>
+  <div class="dg" id="lerr"></div>
+  <div><button class="pri">Đăng nhập</button> <button type="button" data-close>Hủy</button></div>
+</form></dialog>
+
+<dialog id="pwDlg"><form class="dlg" id="pwForm">
+  <strong>Đổi mật khẩu</strong>
+  <input id="pc" type="password" placeholder="Mật khẩu hiện tại" autocomplete="current-password" required>
+  <input id="pn" type="password" placeholder="Mật khẩu mới (≥ 6 ký tự)" autocomplete="new-password" required>
+  <input id="pn2" type="password" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" required>
+  <div class="dg" id="perr"></div>
+  <div><button class="pri">Đổi mật khẩu</button> <button type="button" data-close>Hủy</button></div>
+</form></dialog>
+
+<dialog id="usersDlg" class="wide"><div class="dlg">
+  <h2>Phân quyền người dùng <button class="ico" data-close>Đóng</button></h2>
+  <div class="mu">Viewer: chỉ xem · Editor: thêm/sửa/xóa/kéo thả · Admin: toàn quyền, kể cả quản lý người dùng.</div>
   <div id="ulist"></div>
-  <form id="uform" class="row" style="margin-top:12px;grid-template-columns:1fr 1fr auto auto">
-    <input id="nu" placeholder="Tên đăng nhập mới" required><input id="np" type="password" placeholder="Mật khẩu (≥ 6 ký tự)" required>
+  <form id="uform" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+    <input id="nu" placeholder="Tên đăng nhập mới" required style="flex:1 1 140px"><input id="np" type="password" placeholder="Mật khẩu (≥ 6 ký tự)" required style="flex:1 1 140px">
     <select id="nr"><option value="viewer">Viewer</option><option value="editor" selected>Editor</option><option value="admin">Admin</option></select>
     <button class="pri">Thêm</button>
   </form>
   <div class="dg" id="uerr"></div>
-</section></div>
+</div></dialog>
+
 <script>
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let S={sel:null,flows:[]},me=null,editId=null,delStep=null,delFlow=null,saveT;
+let S={sel:null,flows:[]},me=null,editId=null,delStep=null,delFlow=null,saveT,form={img:''};
 const api=async(url,opt={})=>{
   const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...opt});
   const d=await r.json().catch(()=>({}));
@@ -98,6 +118,7 @@ const isAdmin=()=>myRole()==='admin';
 const canWrite=()=>['admin','editor'].includes(myRole());
 const cur=()=>S.flows.find(f=>f.id===S.sel);
 const move=(arr,a,b)=>{if(a===b||a<0||b<0||b>=arr.length)return;const [x]=arr.splice(a,1);arr.splice(b,0,x)};
+const resetForm=()=>{editId=null;form.img=''};
 function persist(){
   if(!canWrite())return;clearTimeout(saveT);
   saveT=setTimeout(()=>api('/api/flows',{method:'PUT',body:JSON.stringify({flows:S.flows})}).catch(e=>alert('Không lưu được: '+e.message)),400);
@@ -111,37 +132,47 @@ function dnd(el,arr,i,after){
   el.ondragleave=()=>el.classList.remove('over');
   el.ondrop=e=>{e.preventDefault();el.classList.remove('over');if(window._arr!==arr)return;move(arr,window._from,i);window._arr=null;after()};
 }
+/* Nén ảnh trên trình duyệt (tối đa 1000px, JPEG) trước khi tải lên */
+async function compress(file){
+  const bmp=await createImageBitmap(file),sc=Math.min(1,1000/Math.max(bmp.width,bmp.height));
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bmp,0,0,c.width,c.height);
+  let q=.8,d;do{d=c.toDataURL('image/jpeg',q);q-=.1}while(d.length>650000&&q>.25);
+  return d;
+}
+const imgUrl=id=>'/api/image?id='+encodeURIComponent(id);
+
 function renderBar(){
-  const w=$('who');
-  if(!me){w.textContent='Chưa đăng nhập · chỉ xem';w.className='badge ro'}
-  else{w.textContent=me.username+' · '+({admin:'Admin',editor:'Editor',viewer:'Viewer'}[me.role]);w.className='badge'+(me.role==='viewer'?' ro':'')}
+  const w=$('who');w.hidden=!(me&&myRole()!=='viewer');
+  if(!w.hidden)w.textContent=me.username+' · '+(isAdmin()?'Admin':'Editor');
   $('loginBtn').hidden=!!me;$('logoutBtn').hidden=!me;
-  $('usersBtn').hidden=!isAdmin();$('addFlow').hidden=!canWrite();
-  $('hint').textContent=canWrite()?'Kéo ⠿ để sắp xếp thứ tự quy trình.':'';
+  $('pwBtn').hidden=!me||!!me.fixed;
+  $('usersBtn').hidden=!isAdmin();$('addFlow').hidden=!canWrite();$('hint').hidden=!canWrite();
 }
 function renderFlows(){
-  const box=$('flows');box.innerHTML='';
+  const box=$('flows'),w=canWrite();box.innerHTML='';
   S.flows.forEach((f,i)=>{
     const d=document.createElement('div');d.className='fl'+(f.id===S.sel?' on':'');
-    d.innerHTML=`${canWrite()?'<span class="grip">⠿</span>':''}<span class="t">${esc(f.title||'(chưa đặt tên)')}</span><span class="mu">${f.steps.length}</span>`;
-    d.onclick=()=>{S.sel=f.id;editId=delStep=delFlow=null;render()};
+    d.innerHTML=`${w?'<span class="grip">⠿</span>':''}<span class="t">${esc(f.title||'(chưa đặt tên)')}</span>${w?`<span class="mu">${f.steps.length}</span>`:''}`;
+    d.onclick=()=>{S.sel=f.id;resetForm();delStep=delFlow=null;render()};
     dnd(d,S.flows,i,()=>{persist();render()});box.appendChild(d);
   });
   if(!S.flows.length)box.innerHTML='<div class="empty">Chưa có quy trình nào.</div>';
 }
+function prevHTML(){return form.img?`<img class="thumb" src="${imgUrl(form.img)}" alt=""> <button type="button" class="ico dg" id="rmImg">Xóa hình</button>`:''}
 function renderMain(){
   const m=$('main'),f=cur(),w=canWrite();
-  if(!f){m.innerHTML='<div class="empty">Chọn hoặc tạo một quy trình để bắt đầu.</div>';return}
+  if(!f){m.innerHTML='<div class="empty">'+(w?'Chọn hoặc tạo một quy trình để bắt đầu.':'Chưa có quy trình nào.')+'</div>';return}
   const es=editId?f.steps.find(s=>s.id===editId):null;
-  m.innerHTML=`${w?'':`<div class="ro-note">${me?'Bạn đang ở quyền Viewer: chỉ xem. Hãy nhờ Admin cấp quyền Editor để chỉnh sửa.':'Bạn chưa đăng nhập nên chỉ xem được. Bấm “Đăng nhập” nếu bạn có tài khoản.'}</div>`}
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-    <input class="title" id="ttl" placeholder="Nhập tiêu đề quy trình…" value="${esc(f.title)}" ${w?'':'disabled'}>
-    ${!w?'':delFlow===f.id?'<button class="dg" id="dfY">Xóa thật?</button><button id="dfN">Hủy</button>':'<button class="dg" id="df">Xóa quy trình</button>'}
-  </div>
+  m.innerHTML=`${w?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+    <input class="title" id="ttl" placeholder="Nhập tiêu đề quy trình…" value="${esc(f.title)}">
+    ${delFlow===f.id?'<button class="dg" id="dfY">Xóa thật?</button><button id="dfN">Hủy</button>':'<button class="dg" id="df">Xóa quy trình</button>'}</div>`
+    :`<h2 class="title-ro">${esc(f.title)}</h2>`}
   <div id="steps"></div>
   ${w?`<div class="form"><strong>${es?'Sửa bước':'Thêm bước mới'}</strong>
     <div class="row"><input id="sn" placeholder="Tên bước *" value="${esc(es?.name)}"><input id="so" placeholder="Đơn vị / người phụ trách" value="${esc(es?.owner)}"></div>
     <textarea id="sd" rows="2" placeholder="Ghi chú, hồ sơ cần có…">${esc(es?.note)}</textarea>
+    <div class="imgrow"><label class="btnlike">📷 Chọn hình minh họa<input type="file" id="sf" accept="image/*" hidden></label><span id="imgPrev">${prevHTML()}</span><span class="mu">(không bắt buộc)</span></div>
     <div><button class="pri" id="ok">${es?'Lưu thay đổi':'+ Thêm bước'}</button> ${es?'<button id="cx">Hủy</button>':''}</div></div>`:''}`;
   const list=m.querySelector('#steps');
   if(!f.steps.length)list.innerHTML='<div class="empty">Chưa có bước nào.</div>';
@@ -149,16 +180,17 @@ function renderMain(){
     if(i)list.insertAdjacentHTML('beforeend','<div class="arrow">↓</div>');
     const d=document.createElement('div');d.className='step';
     d.innerHTML=`${w?'<span class="grip" title="Kéo để đổi thứ tự">⠿</span>':''}<div class="num">${i+1}</div>
-      <div class="body"><div><strong>${esc(s.name)}</strong></div>${s.owner?`<span class="own">${esc(s.owner)}</span>`:''}${s.note?`<div class="note">${esc(s.note)}</div>`:''}</div>
+      <div class="body"><div><strong>${esc(s.name)}</strong></div>${s.owner?`<span class="own">${esc(s.owner)}</span>`:''}${s.note?`<div class="note">${esc(s.note)}</div>`:''}
+      ${s.img?`<a href="${imgUrl(s.img)}" target="_blank" rel="noopener"><img class="pic" loading="lazy" src="${imgUrl(s.img)}" alt="${esc(s.name)}"></a>`:''}</div>
       ${w?`<div class="acts"><button class="ico" data-a="up">▲</button><button class="ico" data-a="dn">▼</button><button class="ico" data-a="ed">Sửa</button>
       ${delStep===s.id?'<button class="ico dg" data-a="dy">Xóa thật?</button>':'<button class="ico dg" data-a="del">Xóa</button>'}</div>`:''}`;
     d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
       const a=b.dataset.a;
       if(a==='up')move(f.steps,i,i-1);
       if(a==='dn')move(f.steps,i,i+1);
-      if(a==='ed')editId=s.id;
+      if(a==='ed'){editId=s.id;form.img=s.img||''}
       if(a==='del')delStep=s.id;
-      if(a==='dy'){f.steps.splice(i,1);delStep=null;if(editId===s.id)editId=null}
+      if(a==='dy'){f.steps.splice(i,1);delStep=null;if(editId===s.id)resetForm()}
       persist();render();
     });
     dnd(d,f.steps,i,()=>{persist();render()});list.appendChild(d);
@@ -168,35 +200,56 @@ function renderMain(){
   q('#ttl').onchange=e=>{f.title=e.target.value;persist();renderFlows()};
   if(q('#df'))q('#df').onclick=()=>{delFlow=f.id;render()};
   if(q('#dfN'))q('#dfN').onclick=()=>{delFlow=null;render()};
-  if(q('#dfY'))q('#dfY').onclick=()=>{S.flows=S.flows.filter(x=>x.id!==f.id);S.sel=S.flows[0]?.id||null;delFlow=editId=null;persist();render()};
-  if(q('#cx'))q('#cx').onclick=()=>{editId=null;render()};
+  if(q('#dfY'))q('#dfY').onclick=()=>{S.flows=S.flows.filter(x=>x.id!==f.id);S.sel=S.flows[0]?.id||null;delFlow=null;resetForm();persist();render()};
+  if(q('#cx'))q('#cx').onclick=()=>{resetForm();render()};
+  const setPrev=()=>{q('#imgPrev').innerHTML=prevHTML();const r=q('#rmImg');if(r)r.onclick=()=>{form.img='';setPrev()}};setPrev();
+  q('#sf').onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    q('#imgPrev').textContent='Đang tải ảnh…';
+    try{const r=await api('/api/image',{method:'POST',body:JSON.stringify({data:await compress(file)})});form.img=r.id}
+    catch(x){alert('Không tải được ảnh: '+x.message)}
+    e.target.value='';setPrev();
+  };
   q('#ok').onclick=()=>{
     const name=q('#sn').value.trim();if(!name){q('#sn').focus();return}
-    const owner=q('#so').value.trim(),note=q('#sd').value.trim();
-    if(es){Object.assign(es,{name,owner,note});editId=null}else f.steps.push({id:uid(),name,owner,note});
-    persist();render();
+    const owner=q('#so').value.trim(),note=q('#sd').value.trim(),img=form.img;
+    if(es){Object.assign(es,{name,owner,note,img});}else f.steps.push({id:uid(),name,owner,note,img});
+    resetForm();persist();render();
   };
 }
 function render(){renderBar();renderFlows();renderMain()}
 $('addFlow').onclick=()=>{
-  const f={id:uid(),title:'Quy trình mới',steps:[]};S.flows.push(f);S.sel=f.id;editId=null;persist();render();
+  const f={id:uid(),title:'Quy trình mới',steps:[]};S.flows.push(f);S.sel=f.id;resetForm();persist();render();
   const t=$('ttl');if(t){t.focus();t.select()}
 };
 
-/* Đăng nhập / đăng xuất */
-$('loginBtn').onclick=()=>{$('loginWrap').hidden=false;$('lu').focus()};
-$('lcancel').onclick=()=>{$('loginWrap').hidden=true};
+/* Hộp thoại (modal) */
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('click',e=>{if(e.target===d)d.close()});
+  d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());
+});
+$('loginBtn').onclick=()=>{$('lerr').textContent='';$('loginDlg').showModal();$('lu').focus()};
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();$('lerr').textContent='';
   try{const d=await api('/api/auth?action=login',{method:'POST',body:JSON.stringify({username:$('lu').value.trim(),password:$('lp').value})});
-    me=d.user;$('lp').value='';$('loginWrap').hidden=true;render()}
+    me=d.user;$('lp').value='';$('loginDlg').close();render()}
   catch(x){$('lerr').textContent=x.message}
 };
-$('logoutBtn').onclick=async()=>{await api('/api/auth?action=logout');me=null;$('usersWrap').hidden=true;render()};
+$('logoutBtn').onclick=async()=>{await api('/api/auth?action=logout');me=null;document.querySelectorAll('dialog').forEach(d=>d.close());resetForm();render()};
 
-/* Phân quyền */
+/* Đổi mật khẩu (mọi tài khoản đã đăng nhập) */
+$('pwBtn').onclick=()=>{$('pwForm').reset();$('perr').textContent='';$('pwDlg').showModal();$('pc').focus()};
+$('pwForm').onsubmit=async e=>{
+  e.preventDefault();$('perr').textContent='';
+  if($('pn').value!==$('pn2').value){$('perr').textContent='Mật khẩu nhập lại không khớp';return}
+  try{await api('/api/auth?action=password',{method:'POST',body:JSON.stringify({current:$('pc').value,next:$('pn').value})});
+    $('pwDlg').close();alert('Đã đổi mật khẩu')}
+  catch(x){$('perr').textContent=x.message}
+};
+
+/* Phân quyền (chỉ Admin) */
 async function renderUsers(){
-  if($('usersWrap').hidden)return;
+  if(!$('usersDlg').open)return;
   const box=$('ulist');
   try{
     const {users}=await api('/api/users');box.innerHTML='';
@@ -207,7 +260,7 @@ async function renderUsers(){
       const sel=document.createElement('select');
       [['viewer','Viewer'],['editor','Editor'],['admin','Admin']].forEach(([v,t])=>{const o=new Option(t,v);o.selected=v===u.role;sel.add(o)});
       sel.onchange=()=>saveUser(u.username,'',sel.value);
-      const pw=document.createElement('button');pw.className='ico';pw.textContent='Đổi mật khẩu';
+      const pw=document.createElement('button');pw.className='ico';pw.textContent='Đặt lại mật khẩu';
       pw.onclick=()=>{const p=prompt('Mật khẩu mới cho '+u.username+' (≥ 6 ký tự):');if(p)saveUser(u.username,p,sel.value)};
       const del=document.createElement('button');del.className='ico dg';del.textContent='Xóa';
       del.onclick=async()=>{if(confirm('Xóa tài khoản '+u.username+'?')){await api('/api/users?username='+encodeURIComponent(u.username),{method:'DELETE'});renderUsers()}};
@@ -220,8 +273,7 @@ async function saveUser(username,password,role){
   try{await api('/api/users',{method:'POST',body:JSON.stringify({username,password,role})});renderUsers()}
   catch(e){$('uerr').textContent=e.message;renderUsers()}
 }
-$('usersBtn').onclick=()=>{$('usersWrap').hidden=false;renderUsers()};
-$('usersClose').onclick=()=>{$('usersWrap').hidden=true};
+$('usersBtn').onclick=()=>{$('usersDlg').showModal();renderUsers()};
 $('uform').onsubmit=async e=>{e.preventDefault();await saveUser($('nu').value.trim(),$('np').value,$('nr').value);if(!$('uerr').textContent){$('nu').value=$('np').value=''}};
 
 /* Khởi động */

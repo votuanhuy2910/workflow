@@ -39,7 +39,7 @@ const same = (a, b) => {
 async function getUser(req) {
   const u = readToken(getCookie(req, 'sid'));
   if (!u) return null;
-  if (process.env.ADMIN_USER && u === process.env.ADMIN_USER) return { username: u, role: 'admin' };
+  if (process.env.ADMIN_USER && u === process.env.ADMIN_USER) return { username: u, role: 'admin', fixed: true };
   const rec = await redis.hget('users', u);
   return rec ? { username: u, role: rec.role } : null;
 }

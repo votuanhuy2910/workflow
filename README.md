@@ -9,6 +9,7 @@ api/_lib.js         Redis, phiên đăng nhập, băm mật khẩu
 api/auth.js         Đăng nhập / đăng xuất / me
 api/flows.js        GET (ai cũng xem) · PUT (Admin/Editor)
 api/users.js        Quản lý người dùng (chỉ Admin)
+api/image.js        Xem ảnh (ai cũng xem) · tải ảnh lên (Admin/Editor)
 package.json
 ```
 
@@ -24,9 +25,13 @@ package.json
 4. **Redeploy**. Mở web, bấm Đăng nhập bằng tài khoản Admin gốc, bấm **Phân quyền** để tạo user.
 
 ## Vai trò
-- Chưa đăng nhập hoặc **Viewer**: chỉ xem.
-- **Editor**: thêm/sửa/xóa/kéo thả quy trình và các bước.
-- **Admin**: như Editor, cộng thêm quản lý người dùng.
+- Chưa đăng nhập hoặc **Viewer**: chỉ thấy nội dung các quy trình (không có thanh công cụ nào khác).
+- **Editor**: thêm/sửa/xóa/kéo thả quy trình, bước và hình minh họa; có nút **Đổi mật khẩu**.
+- **Admin**: như Editor, cộng thêm nút **Phân quyền** để quản lý người dùng.
+- Admin gốc (khai báo bằng biến môi trường) đổi mật khẩu qua `ADMIN_PASSWORD`.
+
+## Hình minh họa
+Mỗi bước có thể kèm 1 hình. Ảnh được nén thành JPEG (tối đa 1000px) ngay trên trình duyệt rồi lưu trong Redis (khóa `img:<id>`). Ảnh không còn bước nào dùng sẽ tự bị xóa khi lưu.
 
 ## Chạy thử máy local
 `vercel env pull .env.local` rồi `vercel dev`.
