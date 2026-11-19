@@ -59,6 +59,27 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .imgrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .btnlike{border:1px solid var(--bd);border-radius:8px;padding:6px 10px;cursor:pointer}
 .title-ro{font-size:20px;margin:0 0 12px}
+html{scroll-behavior:smooth}
+button,.fl,.step,.btnlike,input,textarea,select{transition:background-color .2s,border-color .2s,box-shadow .2s,transform .15s,opacity .2s,color .2s}
+button:active{transform:scale(.97)}
+.fl:hover{border-color:var(--ac);transform:translateX(2px)}
+.step:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes tin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.enter .step,.enter .arrow,.enter .title-ro{animation:up .35s ease both;animation-delay:calc(var(--i,0)*50ms)}
+.step.pop{animation:pop .3s ease}
+.out{opacity:0!important;transform:translateY(-6px)!important;transition:opacity .2s,transform .2s!important}
+dialog[open]{animation:pop .22s ease}
+dialog[open]::backdrop{animation:fade .22s ease}
+.pic{opacity:0;transition:opacity .4s}
+.pic.ok{opacity:1}
+#toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:100;max-width:min(92vw,340px)}
+.toast{background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:tin .3s ease;display:flex;gap:8px;align-items:center;font-size:14px}
+.toast.err{background:var(--dg);color:#fff}
+.toast.bye{opacity:0;transform:translateX(20px);transition:opacity .3s,transform .3s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -102,11 +123,18 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   <div class="dg" id="uerr"></div>
 </div></dialog>
 
+<dialog id="cfDlg"><div class="dlg">
+  <strong>Bạn có muốn xóa?</strong>
+  <div class="mu" id="cfMsg"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button id="cfNo">Hủy</button><button class="dg" id="cfYes">Xóa</button></div>
+</div></dialog>
+<div id="toasts" aria-live="polite"></div>
+
 <script>
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let S={sel:null,flows:[]},me=null,editId=null,delStep=null,delFlow=null,saveT,form={img:''};
+let S={sel:null,flows:[]},me=null,editId=null,saveT,form={img:''},animate=true,newId=null,pendMsg='';
 const api=async(url,opt={})=>{
   const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...opt});
   const d=await r.json().catch(()=>({}));
@@ -119,9 +147,28 @@ const canWrite=()=>['admin','editor'].includes(myRole());
 const cur=()=>S.flows.find(f=>f.id===S.sel);
 const move=(arr,a,b)=>{if(a===b||a<0||b<0||b>=arr.length)return;const [x]=arr.splice(a,1);arr.splice(b,0,x)};
 const resetForm=()=>{editId=null;form.img=''};
-function persist(){
-  if(!canWrite())return;clearTimeout(saveT);
-  saveT=setTimeout(()=>api('/api/flows',{method:'PUT',body:JSON.stringify({flows:S.flows})}).catch(e=>alert('Không lưu được: '+e.message)),400);
+/* Thông báo (toast), hộp thoại xác nhận và hiệu ứng biến mất */
+function toast(msg,type){
+  const box=$('toasts'),t=document.createElement('div'),i=document.createElement('span'),m=document.createElement('span');
+  t.className='toast'+(type==='err'?' err':'');
+  i.textContent=type==='err'?'⚠':'✓';if(type!=='err')i.style.color='#4ade80';
+  m.textContent=msg;t.append(i,m);box.appendChild(t);
+  while(box.children.length>4)box.firstChild.remove();
+  setTimeout(()=>{t.classList.add('bye');setTimeout(()=>t.remove(),320)},type==='err'?4500:2600);
+}
+function confirmBox(msg){return new Promise(res=>{
+  const d=$('cfDlg');let r=false;$('cfMsg').textContent=msg;
+  $('cfYes').onclick=()=>{r=true;d.close()};$('cfNo').onclick=()=>d.close();
+  d.onclose=()=>res(r);d.showModal();$('cfNo').focus();
+})}
+const fadeOut=el=>{el.classList.add('out');return new Promise(r=>setTimeout(r,220))};
+function persist(msg){
+  if(!canWrite())return;if(msg)pendMsg=msg;clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    const m=pendMsg||'Lưu thành công';pendMsg='';
+    try{await api('/api/flows',{method:'PUT',body:JSON.stringify({flows:S.flows})});toast(m)}
+    catch(e){toast('Không lưu được: '+e.message,'err')}
+  },400);
 }
 function dnd(el,arr,i,after){
   if(!canWrite())return;
@@ -154,7 +201,7 @@ function renderFlows(){
   S.flows.forEach((f,i)=>{
     const d=document.createElement('div');d.className='fl'+(f.id===S.sel?' on':'');
     d.innerHTML=`${w?'<span class="grip">⠿</span>':''}<span class="t">${esc(f.title||'(chưa đặt tên)')}</span>${w?`<span class="mu">${f.steps.length}</span>`:''}`;
-    d.onclick=()=>{S.sel=f.id;resetForm();delStep=delFlow=null;render()};
+    d.onclick=()=>{S.sel=f.id;resetForm();animate=true;render()};
     dnd(d,S.flows,i,()=>{persist();render()});box.appendChild(d);
   });
   if(!S.flows.length)box.innerHTML='<div class="empty">Chưa có quy trình nào.</div>';
@@ -162,11 +209,12 @@ function renderFlows(){
 function prevHTML(){return form.img?`<img class="thumb" src="${imgUrl(form.img)}" alt=""> <button type="button" class="ico dg" id="rmImg">Xóa hình</button>`:''}
 function renderMain(){
   const m=$('main'),f=cur(),w=canWrite();
+  m.classList.remove('out');m.classList.toggle('enter',animate);
   if(!f){m.innerHTML='<div class="empty">'+(w?'Chọn hoặc tạo một quy trình để bắt đầu.':'Chưa có quy trình nào.')+'</div>';return}
   const es=editId?f.steps.find(s=>s.id===editId):null;
   m.innerHTML=`${w?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
     <input class="title" id="ttl" placeholder="Nhập tiêu đề quy trình…" value="${esc(f.title)}">
-    ${delFlow===f.id?'<button class="dg" id="dfY">Xóa thật?</button><button id="dfN">Hủy</button>':'<button class="dg" id="df">Xóa quy trình</button>'}</div>`
+    <button class="dg" id="df">Xóa quy trình</button></div>`
     :`<h2 class="title-ro">${esc(f.title)}</h2>`}
   <div id="steps"></div>
   ${w?`<div class="form"><strong>${es?'Sửa bước':'Thêm bước mới'}</strong>
@@ -178,48 +226,52 @@ function renderMain(){
   if(!f.steps.length)list.innerHTML='<div class="empty">Chưa có bước nào.</div>';
   f.steps.forEach((s,i)=>{
     if(i)list.insertAdjacentHTML('beforeend','<div class="arrow">↓</div>');
-    const d=document.createElement('div');d.className='step';
+    const d=document.createElement('div');d.className='step'+(s.id===newId?' pop':'');d.style.setProperty('--i',i);
     d.innerHTML=`${w?'<span class="grip" title="Kéo để đổi thứ tự">⠿</span>':''}<div class="num">${i+1}</div>
       <div class="body"><div><strong>${esc(s.name)}</strong></div>${s.owner?`<span class="own">${esc(s.owner)}</span>`:''}${s.note?`<div class="note">${esc(s.note)}</div>`:''}
-      ${s.img?`<a href="${imgUrl(s.img)}" target="_blank" rel="noopener"><img class="pic" loading="lazy" src="${imgUrl(s.img)}" alt="${esc(s.name)}"></a>`:''}</div>
+      ${s.img?`<a href="${imgUrl(s.img)}" target="_blank" rel="noopener"><img class="pic" onload="this.classList.add('ok')" loading="lazy" src="${imgUrl(s.img)}" alt="${esc(s.name)}"></a>`:''}</div>
       ${w?`<div class="acts"><button class="ico" data-a="up">▲</button><button class="ico" data-a="dn">▼</button><button class="ico" data-a="ed">Sửa</button>
-      ${delStep===s.id?'<button class="ico dg" data-a="dy">Xóa thật?</button>':'<button class="ico dg" data-a="del">Xóa</button>'}</div>`:''}`;
-    d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      <button class="ico dg" data-a="del">Xóa</button></div>`:''}`;
+    d.querySelectorAll('button').forEach(b=>b.onclick=async()=>{
       const a=b.dataset.a;
-      if(a==='up')move(f.steps,i,i-1);
-      if(a==='dn')move(f.steps,i,i+1);
+      if(a==='del'){
+        if(!await confirmBox('Bạn có muốn xóa bước “'+s.name+'”?'))return;
+        await fadeOut(d);f.steps.splice(i,1);if(editId===s.id)resetForm();persist('Xóa thành công');render();return;
+      }
+      if(a==='up'||a==='dn'){const j=a==='up'?i-1:i+1;if(j<0||j>=f.steps.length)return;move(f.steps,i,j);persist('Lưu thành công')}
       if(a==='ed'){editId=s.id;form.img=s.img||''}
-      if(a==='del')delStep=s.id;
-      if(a==='dy'){f.steps.splice(i,1);delStep=null;if(editId===s.id)resetForm()}
-      persist();render();
+      render();
     });
     dnd(d,f.steps,i,()=>{persist();render()});list.appendChild(d);
   });
   if(!w)return;
   const q=s=>m.querySelector(s);
-  q('#ttl').onchange=e=>{f.title=e.target.value;persist();renderFlows()};
-  if(q('#df'))q('#df').onclick=()=>{delFlow=f.id;render()};
-  if(q('#dfN'))q('#dfN').onclick=()=>{delFlow=null;render()};
-  if(q('#dfY'))q('#dfY').onclick=()=>{S.flows=S.flows.filter(x=>x.id!==f.id);S.sel=S.flows[0]?.id||null;delFlow=null;resetForm();persist();render()};
+  q('#ttl').onchange=e=>{f.title=e.target.value;persist('Lưu thành công');renderFlows()};
+  q('#df').onclick=async()=>{
+    if(!await confirmBox('Bạn có muốn xóa quy trình “'+(f.title||'chưa đặt tên')+'” cùng toàn bộ các bước?'))return;
+    await fadeOut(m);S.flows=S.flows.filter(x=>x.id!==f.id);S.sel=S.flows[0]?.id||null;resetForm();animate=true;persist('Xóa thành công');render();
+  };
   if(q('#cx'))q('#cx').onclick=()=>{resetForm();render()};
   const setPrev=()=>{q('#imgPrev').innerHTML=prevHTML();const r=q('#rmImg');if(r)r.onclick=()=>{form.img='';setPrev()}};setPrev();
   q('#sf').onchange=async e=>{
     const file=e.target.files[0];if(!file)return;
     q('#imgPrev').textContent='Đang tải ảnh…';
     try{const r=await api('/api/image',{method:'POST',body:JSON.stringify({data:await compress(file)})});form.img=r.id}
-    catch(x){alert('Không tải được ảnh: '+x.message)}
+    catch(x){toast('Không tải được ảnh: '+x.message,'err')}
     e.target.value='';setPrev();
   };
   q('#ok').onclick=()=>{
     const name=q('#sn').value.trim();if(!name){q('#sn').focus();return}
     const owner=q('#so').value.trim(),note=q('#sd').value.trim(),img=form.img;
-    if(es){Object.assign(es,{name,owner,note,img});}else f.steps.push({id:uid(),name,owner,note,img});
-    resetForm();persist();render();
+    let msg='Lưu thành công';
+    if(es){Object.assign(es,{name,owner,note,img})}
+    else{const id=uid();newId=id;f.steps.push({id,name,owner,note,img});msg='Thêm bước thành công'}
+    resetForm();persist(msg);render();
   };
 }
-function render(){renderBar();renderFlows();renderMain()}
+function render(){renderBar();renderFlows();renderMain();animate=false;newId=null}
 $('addFlow').onclick=()=>{
-  const f={id:uid(),title:'Quy trình mới',steps:[]};S.flows.push(f);S.sel=f.id;resetForm();persist();render();
+  const f={id:uid(),title:'Quy trình mới',steps:[]};S.flows.push(f);S.sel=f.id;resetForm();animate=true;persist('Thêm quy trình thành công');render();
   const t=$('ttl');if(t){t.focus();t.select()}
 };
 
@@ -232,7 +284,7 @@ $('loginBtn').onclick=()=>{$('lerr').textContent='';$('loginDlg').showModal();$(
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();$('lerr').textContent='';
   try{const d=await api('/api/auth?action=login',{method:'POST',body:JSON.stringify({username:$('lu').value.trim(),password:$('lp').value})});
-    me=d.user;$('lp').value='';$('loginDlg').close();render()}
+    me=d.user;$('lp').value='';$('loginDlg').close();render();toast('Đăng nhập thành công')}
   catch(x){$('lerr').textContent=x.message}
 };
 $('logoutBtn').onclick=async()=>{await api('/api/auth?action=logout');me=null;document.querySelectorAll('dialog').forEach(d=>d.close());resetForm();render()};
@@ -243,7 +295,7 @@ $('pwForm').onsubmit=async e=>{
   e.preventDefault();$('perr').textContent='';
   if($('pn').value!==$('pn2').value){$('perr').textContent='Mật khẩu nhập lại không khớp';return}
   try{await api('/api/auth?action=password',{method:'POST',body:JSON.stringify({current:$('pc').value,next:$('pn').value})});
-    $('pwDlg').close();alert('Đã đổi mật khẩu')}
+    $('pwDlg').close();toast('Đổi mật khẩu thành công')}
   catch(x){$('perr').textContent=x.message}
 };
 
@@ -263,18 +315,18 @@ async function renderUsers(){
       const pw=document.createElement('button');pw.className='ico';pw.textContent='Đặt lại mật khẩu';
       pw.onclick=()=>{const p=prompt('Mật khẩu mới cho '+u.username+' (≥ 6 ký tự):');if(p)saveUser(u.username,p,sel.value)};
       const del=document.createElement('button');del.className='ico dg';del.textContent='Xóa';
-      del.onclick=async()=>{if(confirm('Xóa tài khoản '+u.username+'?')){await api('/api/users?username='+encodeURIComponent(u.username),{method:'DELETE'});renderUsers()}};
+      del.onclick=async()=>{if(!await confirmBox('Bạn có muốn xóa tài khoản '+u.username+'?'))return;try{await api('/api/users?username='+encodeURIComponent(u.username),{method:'DELETE'});toast('Xóa thành công');renderUsers()}catch(e){toast(e.message,'err')}};
       d.append(n,sel,pw,del);box.appendChild(d);
     });
   }catch(e){box.textContent=e.message}
 }
-async function saveUser(username,password,role){
+async function saveUser(username,password,role,msg='Lưu thành công'){
   $('uerr').textContent='';
-  try{await api('/api/users',{method:'POST',body:JSON.stringify({username,password,role})});renderUsers()}
+  try{await api('/api/users',{method:'POST',body:JSON.stringify({username,password,role})});toast(msg);renderUsers()}
   catch(e){$('uerr').textContent=e.message;renderUsers()}
 }
 $('usersBtn').onclick=()=>{$('usersDlg').showModal();renderUsers()};
-$('uform').onsubmit=async e=>{e.preventDefault();await saveUser($('nu').value.trim(),$('np').value,$('nr').value);if(!$('uerr').textContent){$('nu').value=$('np').value=''}};
+$('uform').onsubmit=async e=>{e.preventDefault();await saveUser($('nu').value.trim(),$('np').value,$('nr').value,'Thêm người dùng thành công');if(!$('uerr').textContent){$('nu').value=$('np').value=''}};
 
 /* Khởi động */
 async function load(){
