@@ -9,6 +9,7 @@ api/_lib.js         Redis, phiên đăng nhập, băm mật khẩu
 api/auth.js         Đăng nhập / đăng xuất / me
 api/flows.js        GET (ai cũng xem) · PUT (Admin/Editor)
 api/users.js        Quản lý người dùng (chỉ Admin)
+api/history.js      Lịch sử thay đổi (xem: Admin/Editor · khôi phục: Admin)
 api/image.js        Xem ảnh (ai cũng xem) · tải ảnh lên (Admin/Editor)
 package.json
 ```
@@ -39,3 +40,14 @@ Mỗi bước có thể kèm 1 hình. Ảnh được nén thành JPEG (tối đa
 ## Lưu ý
 - Dữ liệu quy trình lưu thành một khối; hai người cùng sửa một lúc thì lần lưu sau ghi đè lần trước.
 - Chưa giới hạn số lần đăng nhập sai; nếu cần, thêm rate limit (vd. `@upstash/ratelimit`).
+
+## Chống ghi đè & lịch sử
+- Mỗi lần lưu gửi kèm số phiên bản; nếu người khác đã lưu trước, server trả lỗi 409 và giao diện hỏi: tải bản mới hoặc ghi đè.
+- Trang tự làm mới sau tối đa 20 giây nếu người khác đã thay đổi (và bạn không đang nhập dở).
+- Lưu 50 thay đổi gần nhất kèm bản chụp dữ liệu; Admin khôi phục được từng bản.
+- Ảnh chỉ bị xóa khi không còn quy trình hiện tại hoặc bản lịch sử nào dùng.
+
+## Swimlane, in/PDF, kéo thả cảm ứng
+- Mỗi quy trình có 2 chế độ xem: Danh sách và Swimlane (mỗi đơn vị phụ trách một hàng).
+- Nút **In / Xuất PDF** in đúng quy trình đang xem; trong hộp thoại in chọn "Lưu dạng PDF".
+- Kéo ⠿ hoạt động bằng cả chuột và cảm ứng.

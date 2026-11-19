@@ -80,11 +80,39 @@ dialog[open]::backdrop{animation:fade .22s ease}
 .toast.err{background:var(--dg);color:#fff}
 .toast.bye{opacity:0;transform:translateX(20px);transition:opacity .3s,transform .3s}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.lanes-wrap{position:relative;overflow-x:auto;border:1px solid var(--bd);border-radius:10px;background:var(--card)}
+.lanes{display:grid;min-width:100%}
+.lane-label{position:sticky;left:0;z-index:2;background:var(--acs);font-weight:600;padding:12px;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);display:flex;align-items:center;font-size:13px}
+.lane-cell{border-bottom:1px solid var(--bd);padding:14px 10px;display:flex;align-items:center;justify-content:center;min-height:76px}
+.lane-card{display:flex;gap:8px;align-items:center;background:var(--card);border:1.5px solid var(--ac);border-radius:10px;padding:8px 10px;font-size:13px;width:100%;position:relative;z-index:1}
+.lane-svg{position:absolute;left:0;top:0;pointer-events:none;z-index:0}
+.lane-path{fill:none;stroke:var(--ac);stroke-width:1.8}
+.viewtabs{display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.print-title,.print-only{display:none}
+.grip{touch-action:none;padding:4px 6px;font-size:16px}
+.ghost{position:fixed;z-index:200;pointer-events:none;opacity:.92;box-shadow:0 10px 30px rgba(0,0,0,.3);margin:0;background:var(--card)}
+.hrow{padding:8px 0;border-bottom:1px solid var(--bd);display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+.hrow ul{margin:4px 0 0;padding-left:18px;color:var(--mu);font-size:13px}
+#hlist{max-height:55vh;overflow:auto}
+.pfix .lanes{width:1000px;min-width:0;grid-template-columns:110px repeat(var(--n),minmax(0,1fr))!important}
+@media print{
+ :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#fff;--card:#fff;--tx:#000;--mu:#555;--bd:#ccc;--ac:#2f5bea;--acs:#e8eeff;color-scheme:light}
+ *{animation:none!important;transition:none!important}
+ .bar,aside,.form,.acts,.grip,.viewtabs,.ttlrow,.title-ro,#toasts,dialog{display:none!important}
+ .app{display:block;padding:0;max-width:none}
+ .card{border:0;padding:0;background:#fff}
+ body{background:#fff;color:#000}
+ .print-title{display:block;font-size:22px;margin:0 0 4px}
+ .print-only{display:block;margin-bottom:14px}
+ .step,.lane-card{break-inside:avoid}
+ .pic{opacity:1!important;max-height:240px}
+ .lanes-wrap{overflow:visible}
+}
 </style>
 </head>
 <body>
 <div class="bar"><h1>🎓 Quy trình làm việc đại học</h1><span class="badge" id="who" hidden></span>
-  <button id="usersBtn" hidden>Phân quyền</button><button id="pwBtn" hidden>Đổi mật khẩu</button><button id="loginBtn">Đăng nhập</button><button id="logoutBtn" hidden>Đăng xuất</button></div>
+  <button id="histBtn" hidden>Lịch sử</button><button id="usersBtn" hidden>Phân quyền</button><button id="pwBtn" hidden>Đổi mật khẩu</button><button id="loginBtn">Đăng nhập</button><button id="logoutBtn" hidden>Đăng xuất</button></div>
 <div class="app">
   <aside class="card">
     <h2>Danh sách quy trình <button class="pri ico" id="addFlow" hidden>+ Mới</button></h2>
@@ -123,8 +151,18 @@ dialog[open]::backdrop{animation:fade .22s ease}
   <div class="dg" id="uerr"></div>
 </div></dialog>
 
+<dialog id="histDlg" class="wide"><div class="dlg">
+  <h2>Lịch sử thay đổi <button class="ico" data-close>Đóng</button></h2>
+  <div class="mu">Lưu tối đa 50 thay đổi gần nhất. Admin có thể khôi phục lại một phiên bản.</div>
+  <div id="hlist"></div>
+</div></dialog>
+<dialog id="cflDlg"><div class="dlg">
+  <strong>Dữ liệu đã bị thay đổi</strong>
+  <div class="mu" id="cflMsg"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px"><button data-close>Để sau</button><button id="cflForce" class="dg">Ghi đè bằng bản của tôi</button><button id="cflReload" class="pri">Tải bản mới nhất</button></div>
+</div></dialog>
 <dialog id="cfDlg"><div class="dlg">
-  <strong>Bạn có muốn xóa?</strong>
+  <strong id="cfTitle">Bạn có muốn xóa?</strong>
   <div class="mu" id="cfMsg"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button id="cfNo">Hủy</button><button class="dg" id="cfYes">Xóa</button></div>
 </div></dialog>
@@ -134,11 +172,11 @@ dialog[open]::backdrop{animation:fade .22s ease}
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let S={sel:null,flows:[]},me=null,editId=null,saveT,form={img:''},animate=true,newId=null,pendMsg='';
+let S={sel:null,flows:[]},me=null,editId=null,saveT,form={img:''},animate=true,newId=null,pendMsg='',ver=0,saving=false,again=false,view=(()=>{try{return localStorage.getItem('qt-view')==='lane'?'lane':'list'}catch(e){return'list'}})();
 const api=async(url,opt={})=>{
   const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...opt});
   const d=await r.json().catch(()=>({}));
-  if(!r.ok)throw new Error(d.error||('Lỗi '+r.status));
+  if(!r.ok){const e=new Error(d.error||('Lỗi '+r.status));e.status=r.status;e.data=d;throw e}
   return d;
 };
 const myRole=()=>me?.role||'viewer';
@@ -151,33 +189,67 @@ const resetForm=()=>{editId=null;form.img=''};
 function toast(msg,type){
   const box=$('toasts'),t=document.createElement('div'),i=document.createElement('span'),m=document.createElement('span');
   t.className='toast'+(type==='err'?' err':'');
-  i.textContent=type==='err'?'⚠':'✓';if(type!=='err')i.style.color='#4ade80';
+  i.textContent=type==='err'?'⚠':type==='info'?'ℹ':'✓';if(!type)i.style.color='#4ade80';
   m.textContent=msg;t.append(i,m);box.appendChild(t);
   while(box.children.length>4)box.firstChild.remove();
   setTimeout(()=>{t.classList.add('bye');setTimeout(()=>t.remove(),320)},type==='err'?4500:2600);
 }
-function confirmBox(msg){return new Promise(res=>{
-  const d=$('cfDlg');let r=false;$('cfMsg').textContent=msg;
+function confirmBox(msg,title='Bạn có muốn xóa?',yes='Xóa'){return new Promise(res=>{
+  const d=$('cfDlg');let r=false;$('cfMsg').textContent=msg;$('cfTitle').textContent=title;$('cfYes').textContent=yes;
   $('cfYes').onclick=()=>{r=true;d.close()};$('cfNo').onclick=()=>d.close();
   d.onclose=()=>res(r);d.showModal();$('cfNo').focus();
 })}
 const fadeOut=el=>{el.classList.add('out');return new Promise(r=>setTimeout(r,220))};
+const fmt=t=>new Date(t).toLocaleString('vi-VN');
 function persist(msg){
   if(!canWrite())return;if(msg)pendMsg=msg;clearTimeout(saveT);
-  saveT=setTimeout(async()=>{
-    const m=pendMsg||'Lưu thành công';pendMsg='';
-    try{await api('/api/flows',{method:'PUT',body:JSON.stringify({flows:S.flows})});toast(m)}
-    catch(e){toast('Không lưu được: '+e.message,'err')}
-  },400);
+  saveT=setTimeout(doSave,400);
+}
+async function doSave(){
+  saveT=null;
+  if(saving){again=true;return}
+  saving=true;const m=pendMsg||'Lưu thành công';pendMsg='';
+  try{const r=await api('/api/flows',{method:'PUT',body:JSON.stringify({flows:S.flows,version:ver})});ver=r.version;toast(m)}
+  catch(e){if(e.status===409)onConflict(e.data);else toast('Không lưu được: '+e.message,'err')}
+  saving=false;if(again){again=false;persist()}
+}
+function onConflict(c){
+  const d=$('cflDlg');if(d.open)return;
+  $('cflMsg').textContent=(c.by||'Một người dùng khác')+' vừa thay đổi dữ liệu'+(c.at?' lúc '+fmt(c.at):'')+'. Bạn có thể tải bản mới nhất (thay đổi chưa lưu của bạn sẽ mất) hoặc ghi đè bằng bản của bạn.';
+  $('cflReload').onclick=async()=>{d.close();await load();toast('Đã tải bản mới nhất','info')};
+  $('cflForce').onclick=()=>{d.close();ver=c.version;persist('Đã ghi đè bằng bản của bạn')};
+  d.showModal();
+}
+/* Tự làm mới khi người khác đã thay đổi (nếu bạn không đang nhập dở) */
+async function sync(){
+  if(saving||saveT||document.hidden||$('cflDlg').open||!$('main'))return;
+  try{
+    const r=await api('/api/flows?check=1');if(r.version===ver)return;
+    if(canWrite()&&(editId||['#sn','#so','#sd'].some(x=>$('main').querySelector(x)?.value)))return;
+    const f=await api('/api/flows');S.flows=f.flows;ver=f.version;
+    if(!S.flows.find(x=>x.id===S.sel))S.sel=S.flows[0]?.id||null;
+    render();if(canWrite())toast('Dữ liệu vừa được người khác cập nhật','info');
+  }catch(e){}
 }
 function dnd(el,arr,i,after){
-  if(!canWrite())return;
-  el.draggable=true;
-  el.ondragstart=e=>{e.dataTransfer.setData('text/plain',i);e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('drag'),0);window._from=i;window._arr=arr};
-  el.ondragend=()=>el.classList.remove('drag');
-  el.ondragover=e=>{if(window._arr===arr){e.preventDefault();el.classList.add('over')}};
-  el.ondragleave=()=>el.classList.remove('over');
-  el.ondrop=e=>{e.preventDefault();el.classList.remove('over');if(window._arr!==arr)return;move(arr,window._from,i);window._arr=null;after()};
+  const grip=el.querySelector('.grip');if(!canWrite()||!grip)return;
+  el._arr=arr;el._i=i;el.dataset.dz='1';
+  grip.onclick=e=>e.stopPropagation();
+  grip.onpointerdown=e=>{
+    e.preventDefault();grip.setPointerCapture(e.pointerId);
+    const r=el.getBoundingClientRect(),dy=e.clientY-r.top,ghost=el.cloneNode(true);let over=null;
+    ghost.classList.add('ghost');ghost.style.cssText=`width:${r.width}px;left:${r.left}px;top:${r.top}px`;
+    document.body.appendChild(ghost);el.classList.add('drag');
+    grip.onpointermove=ev=>{
+      ghost.style.top=(ev.clientY-dy)+'px';
+      const t=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('[data-dz]');
+      const nt=t&&t._arr===arr&&t!==el?t:null;
+      if(nt!==over){over?.classList.remove('over');over=nt;over?.classList.add('over')}
+      if(ev.clientY<70)scrollBy(0,-14);else if(ev.clientY>innerHeight-70)scrollBy(0,14);
+    };
+    const end=ok=>{grip.onpointermove=grip.onpointerup=grip.onpointercancel=null;ghost.remove();el.classList.remove('drag');over?.classList.remove('over');if(ok&&over){move(arr,i,over._i);after()}};
+    grip.onpointerup=()=>end(true);grip.onpointercancel=()=>end(false);
+  };
 }
 /* Nén ảnh trên trình duyệt (tối đa 1000px, JPEG) trước khi tải lên */
 async function compress(file){
@@ -194,7 +266,7 @@ function renderBar(){
   if(!w.hidden)w.textContent=me.username+' · '+(isAdmin()?'Admin':'Editor');
   $('loginBtn').hidden=!!me;$('logoutBtn').hidden=!me;
   $('pwBtn').hidden=!me||!!me.fixed;
-  $('usersBtn').hidden=!isAdmin();$('addFlow').hidden=!canWrite();$('hint').hidden=!canWrite();
+  $('histBtn').hidden=!canWrite();$('usersBtn').hidden=!isAdmin();$('addFlow').hidden=!canWrite();$('hint').hidden=!canWrite();
 }
 function renderFlows(){
   const box=$('flows'),w=canWrite();box.innerHTML='';
@@ -212,19 +284,25 @@ function renderMain(){
   m.classList.remove('out');m.classList.toggle('enter',animate);
   if(!f){m.innerHTML='<div class="empty">'+(w?'Chọn hoặc tạo một quy trình để bắt đầu.':'Chưa có quy trình nào.')+'</div>';return}
   const es=editId?f.steps.find(s=>s.id===editId):null;
-  m.innerHTML=`${w?`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+  m.innerHTML=`${w?`<div class="ttlrow" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
     <input class="title" id="ttl" placeholder="Nhập tiêu đề quy trình…" value="${esc(f.title)}">
     <button class="dg" id="df">Xóa quy trình</button></div>`
     :`<h2 class="title-ro">${esc(f.title)}</h2>`}
+  <h2 class="print-title">${esc(f.title)}</h2>
+  <div class="print-only mu">In ngày ${new Date().toLocaleDateString('vi-VN')}</div>
+  <div class="viewtabs"><button class="ico${view==='list'?' pri':''}" data-v="list">☰ Danh sách</button><button class="ico${view==='lane'?' pri':''}" data-v="lane">▦ Swimlane</button><span style="flex:1"></span><button class="ico" id="prt">🖨 In / Xuất PDF</button></div>
   <div id="steps"></div>
-  ${w?`<div class="form"><strong>${es?'Sửa bước':'Thêm bước mới'}</strong>
+  ${w&&view==='list'?`<div class="form"><strong>${es?'Sửa bước':'Thêm bước mới'}</strong>
     <div class="row"><input id="sn" placeholder="Tên bước *" value="${esc(es?.name)}"><input id="so" placeholder="Đơn vị / người phụ trách" value="${esc(es?.owner)}"></div>
     <textarea id="sd" rows="2" placeholder="Ghi chú, hồ sơ cần có…">${esc(es?.note)}</textarea>
     <div class="imgrow"><label class="btnlike">📷 Chọn hình minh họa<input type="file" id="sf" accept="image/*" hidden></label><span id="imgPrev">${prevHTML()}</span><span class="mu">(không bắt buộc)</span></div>
     <div><button class="pri" id="ok">${es?'Lưu thay đổi':'+ Thêm bước'}</button> ${es?'<button id="cx">Hủy</button>':''}</div></div>`:''}`;
   const list=m.querySelector('#steps');
+  m.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;try{localStorage.setItem('qt-view',view)}catch(e){}animate=true;render()});
+  m.querySelector('#prt').onclick=()=>printFlow(f);
+  if(view==='lane'&&f.steps.length)renderLanes(f,list);
   if(!f.steps.length)list.innerHTML='<div class="empty">Chưa có bước nào.</div>';
-  f.steps.forEach((s,i)=>{
+  (view==='lane'?[]:f.steps).forEach((s,i)=>{
     if(i)list.insertAdjacentHTML('beforeend','<div class="arrow">↓</div>');
     const d=document.createElement('div');d.className='step'+(s.id===newId?' pop':'');d.style.setProperty('--i',i);
     d.innerHTML=`${w?'<span class="grip" title="Kéo để đổi thứ tự">⠿</span>':''}<div class="num">${i+1}</div>
@@ -252,6 +330,7 @@ function renderMain(){
     await fadeOut(m);S.flows=S.flows.filter(x=>x.id!==f.id);S.sel=S.flows[0]?.id||null;resetForm();animate=true;persist('Xóa thành công');render();
   };
   if(q('#cx'))q('#cx').onclick=()=>{resetForm();render()};
+  if(!q('#ok'))return;
   const setPrev=()=>{q('#imgPrev').innerHTML=prevHTML();const r=q('#rmImg');if(r)r.onclick=()=>{form.img='';setPrev()}};setPrev();
   q('#sf').onchange=async e=>{
     const file=e.target.files[0];if(!file)return;
@@ -268,6 +347,51 @@ function renderMain(){
     else{const id=uid();newId=id;f.steps.push({id,name,owner,note,img});msg='Thêm bước thành công'}
     resetForm();persist(msg);render();
   };
+}
+/* Swimlane: mỗi đơn vị phụ trách một hàng, mỗi bước một cột */
+function renderLanes(f,host){
+  const NO='(Chưa gán đơn vị)',owners=[];
+  f.steps.forEach(s=>{const o=s.owner||NO;if(!owners.includes(o))owners.push(o)});
+  const n=f.steps.length,wrap=document.createElement('div'),g=document.createElement('div');
+  wrap.className='lanes-wrap';g.className='lanes';g.style.gridTemplateColumns=`150px repeat(${n},minmax(140px,1fr))`;g.style.setProperty('--n',n);
+  owners.forEach(o=>{
+    const lb=document.createElement('div');lb.className='lane-label';lb.textContent=o;g.appendChild(lb);
+    f.steps.forEach((s,i)=>{
+      const c=document.createElement('div');c.className='lane-cell';
+      if((s.owner||NO)===o){
+        const k=document.createElement('div');k.className='lane-card';k.dataset.i=i;
+        k.innerHTML=`<span class="num">${i+1}</span><span>${esc(s.name)}</span>`;if(s.note)k.title=s.note;c.appendChild(k);
+      }
+      g.appendChild(c);
+    });
+  });
+  wrap.appendChild(g);host.appendChild(wrap);requestAnimationFrame(()=>drawArrows(wrap));
+}
+function drawArrows(wrap){
+  wrap.querySelector('svg')?.remove();
+  const cards=[...wrap.querySelectorAll('.lane-card')].sort((a,b)=>a.dataset.i-b.dataset.i);if(cards.length<2)return;
+  const wr=wrap.getBoundingClientRect(),NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('class','lane-svg');svg.setAttribute('width',wrap.scrollWidth);svg.setAttribute('height',wrap.scrollHeight);
+  svg.innerHTML='<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--ac)"/></marker></defs>';
+  for(let i=0;i<cards.length-1;i++){
+    const a=cards[i].getBoundingClientRect(),b=cards[i+1].getBoundingClientRect();
+    const x1=a.right-wr.left+wrap.scrollLeft,y1=a.top+a.height/2-wr.top+wrap.scrollTop,x2=b.left-wr.left+wrap.scrollLeft,y2=b.top+b.height/2-wr.top+wrap.scrollTop,mx=(x1+x2)/2;
+    const p=document.createElementNS(NS,'path');p.setAttribute('d',`M${x1} ${y1}H${mx}V${y2}H${x2}`);p.setAttribute('class','lane-path');p.setAttribute('marker-end','url(#ah)');svg.appendChild(p);
+  }
+  wrap.appendChild(svg);
+}
+window.addEventListener('resize',()=>document.querySelectorAll('.lanes-wrap').forEach(drawArrows));
+/* In / xuất PDF một quy trình (chọn "Lưu dạng PDF" trong hộp thoại in) */
+async function printFlow(f){
+  const imgs=[...document.querySelectorAll('#main img')];imgs.forEach(i=>i.loading='eager');
+  await Promise.race([Promise.all(imgs.map(i=>i.complete?0:new Promise(r=>{i.addEventListener('load',r,{once:true});i.addEventListener('error',r,{once:true})}))),new Promise(r=>setTimeout(r,3000))]);
+  const old=document.title,st=document.createElement('style'),wr=document.querySelector('.lanes-wrap');
+  document.title=f.title||'Quy trình';
+  st.textContent='@page{size:A4 '+(view==='lane'?'landscape':'portrait')+';margin:12mm}';document.head.appendChild(st);
+  if(wr){wr.classList.add('pfix');drawArrows(wr)}
+  const done=()=>{document.title=old;st.remove();if(wr){wr.classList.remove('pfix');drawArrows(wr)}window.removeEventListener('afterprint',done)};
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>window.print(),80);
 }
 function render(){renderBar();renderFlows();renderMain();animate=false;newId=null}
 $('addFlow').onclick=()=>{
@@ -328,16 +452,43 @@ async function saveUser(username,password,role,msg='Lưu thành công'){
 $('usersBtn').onclick=()=>{$('usersDlg').showModal();renderUsers()};
 $('uform').onsubmit=async e=>{e.preventDefault();await saveUser($('nu').value.trim(),$('np').value,$('nr').value,'Thêm người dùng thành công');if(!$('uerr').textContent){$('nu').value=$('np').value=''}};
 
+/* Lịch sử thay đổi */
+async function renderHist(){
+  const box=$('hlist');
+  try{
+    const {history}=await api('/api/history');box.innerHTML='';
+    if(!history.length)box.innerHTML='<div class="mu">Chưa có thay đổi nào được ghi lại.</div>';
+    history.forEach(h=>{
+      const d=document.createElement('div');d.className='hrow';
+      const l=document.createElement('div'),t=document.createElement('div'),ul=document.createElement('ul');
+      t.innerHTML='<strong>#'+Number(h.n)+'</strong> · ';t.append(document.createTextNode(fmt(h.at)+' · '+h.by));
+      h.summary.forEach(x=>{const li=document.createElement('li');li.textContent=x;ul.appendChild(li)});
+      l.append(t,ul);d.appendChild(l);
+      if(isAdmin()){
+        const b=document.createElement('button');b.className='ico';b.textContent='Khôi phục';
+        b.onclick=async()=>{
+          if(!await confirmBox('Khôi phục dữ liệu về trạng thái sau thay đổi #'+h.n+'? Dữ liệu hiện tại vẫn được giữ trong lịch sử.','Khôi phục dữ liệu?','Khôi phục'))return;
+          try{await api('/api/history',{method:'POST',body:JSON.stringify({n:h.n})});$('histDlg').close();await load();toast('Khôi phục thành công')}
+          catch(e){toast(e.message,'err')}
+        };
+        d.appendChild(b);
+      }
+      box.appendChild(d);
+    });
+  }catch(e){box.textContent=e.message}
+}
+$('histBtn').onclick=()=>{$('histDlg').showModal();renderHist()};
+
 /* Khởi động */
 async function load(){
   try{
     const [a,f]=await Promise.all([api('/api/auth?action=me'),api('/api/flows')]);
-    me=a.user;S.flows=f.flows;if(!S.flows.find(x=>x.id===S.sel))S.sel=S.flows[0]?.id||null;
+    me=a.user;S.flows=f.flows;ver=f.version||0;if(!S.flows.find(x=>x.id===S.sel))S.sel=S.flows[0]?.id||null;
   }catch(e){$('main').innerHTML='<div class="empty">Không tải được dữ liệu: '+esc(e.message)+'</div>';return}
   render();
 }
 load();
-window.addEventListener('focus',()=>{if(!canWrite())load()});
+window.addEventListener('focus',sync);setInterval(sync,20000);
 </script>
 </body>
 </html>
