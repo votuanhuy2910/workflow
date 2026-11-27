@@ -95,8 +95,39 @@ dialog[open]::backdrop{animation:fade .22s ease}
 .hrow ul{margin:4px 0 0;padding-left:18px;color:var(--mu);font-size:13px}
 #hlist{max-height:55vh;overflow:auto}
 .pfix .lanes{width:1000px;min-width:0;grid-template-columns:110px repeat(var(--n),minmax(0,1fr))!important}
+:root{--bg:#faf8f5;--card:#fff;--tx:#3a3f4b;--mu:#8b909c;--bd:#ece8e1;--ac:#6b8cc7;--acs:#edf2fb;--dg:#cf6679;--onac:#fff;--sh:0 1px 2px rgba(58,63,75,.04),0 10px 30px rgba(58,63,75,.06);--p0b:#e3edfb;--p0f:#46669a;--p1b:#dcf2e6;--p1f:#2f6b52;--p2b:#fde6d8;--p2f:#9a5532;--p3b:#ebe3f8;--p3f:#5b4a8a;--p4b:#fbe1e9;--p4f:#96405c;--p5b:#faefc8;--p5f:#7c6420;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17191f;--card:#20232b;--tx:#e6e8ee;--mu:#9aa0ad;--bd:#32363f;--ac:#9db6e8;--acs:#2a3247;--dg:#f08fa1;--onac:#17191f;--sh:0 0 0 1px rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.28);--p0b:#2a3650;--p0f:#aac4f2;--p1b:#213a30;--p1f:#9fdcc0;--p2b:#443129;--p2f:#f2c3a8;--p3b:#342f4c;--p3f:#cfc1f3;--p4b:#442b35;--p4f:#f2b6c8;--p5b:#3e3720;--p5f:#eedb93;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17191f;--card:#20232b;--tx:#e6e8ee;--mu:#9aa0ad;--bd:#32363f;--ac:#9db6e8;--acs:#2a3247;--dg:#f08fa1;--onac:#17191f;--sh:0 0 0 1px rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.28);--p0b:#2a3650;--p0f:#aac4f2;--p1b:#213a30;--p1f:#9fdcc0;--p2b:#443129;--p2f:#f2c3a8;--p3b:#342f4c;--p3f:#cfc1f3;--p4b:#442b35;--p4f:#f2b6c8;--p5b:#3e3720;--p5f:#eedb93;color-scheme:dark}
+:root[data-theme="light"]{--bg:#faf8f5;--card:#fff;--tx:#3a3f4b;--mu:#8b909c;--bd:#ece8e1;--ac:#6b8cc7;--acs:#edf2fb;--dg:#cf6679;--onac:#fff;--sh:0 1px 2px rgba(58,63,75,.04),0 10px 30px rgba(58,63,75,.06);--p0b:#e3edfb;--p0f:#46669a;--p1b:#dcf2e6;--p1f:#2f6b52;--p2b:#fde6d8;--p2f:#9a5532;--p3b:#ebe3f8;--p3f:#5b4a8a;--p4b:#fbe1e9;--p4f:#96405c;--p5b:#faefc8;--p5f:#7c6420;color-scheme:light}
+.p0{--pb:var(--p0b);--pf:var(--p0f)}.p1{--pb:var(--p1b);--pf:var(--p1f)}.p2{--pb:var(--p2b);--pf:var(--p2f)}
+.p3{--pb:var(--p3b);--pf:var(--p3f)}.p4{--pb:var(--p4b);--pf:var(--p4f)}.p5{--pb:var(--p5b);--pf:var(--p5f)}
+body{-webkit-font-smoothing:antialiased;line-height:1.55}
+.bar h1{font-weight:600;letter-spacing:-.01em}
+.card{border:0;border-radius:18px;box-shadow:var(--sh);padding:18px}
+button{border-radius:10px}
+button:hover{background:var(--acs);border-color:transparent}
+.pri{color:var(--onac)}.pri:hover{background:var(--ac);filter:brightness(.96)}
+.fl{border:0;background:transparent;border-radius:10px}
+.fl:hover,.fl.on{background:var(--acs);transform:none}
+.fl.on{font-weight:600}
+.title,.title-ro,.print-title{font-weight:600;letter-spacing:-.01em}
+.step{border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:14px 16px;gap:12px}
+.step:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+.step .num{background:var(--pb);color:var(--pf);width:30px;height:30px;font-weight:600}
+.step .own{background:var(--pb);color:var(--pf);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:500}
+.step strong{font-weight:600;font-size:15px}
+.note{color:var(--mu)}
+.arrow{font-size:0;height:18px;display:flex;justify-content:center;margin:0}
+.arrow::after{content:'';width:2px;background:var(--bd);border-radius:2px}
+.lanes-wrap{border:0;border-radius:16px;box-shadow:var(--sh);background:var(--card)}
+.lane-label{background:var(--pb);color:var(--pf);border:0;border-bottom:2px solid var(--card);font-weight:600;font-size:12.5px;letter-spacing:.02em}
+.lane-cell{border:0;border-bottom:2px solid var(--card);background:color-mix(in srgb,var(--pb) 28%,var(--card))}
+.lane-card{border:0;border-radius:12px;background:var(--pb);color:var(--pf);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.07)}
+.lane-card .num{background:color-mix(in srgb,var(--pf) 16%,transparent);color:var(--pf);width:24px;height:24px;font-size:12px}
+.lane-path{stroke:var(--mu);stroke-width:1.5;opacity:.75}
+.viewtabs .pri{box-shadow:none}
 @media print{
- :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#fff;--card:#fff;--tx:#000;--mu:#555;--bd:#ccc;--ac:#2f5bea;--acs:#e8eeff;color-scheme:light}
+ :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#fff;--tx:#000;--mu:#555;--bd:#ddd;--sh:none;--card:#fff;--ac:#6b8cc7;--acs:#edf2fb;--dg:#cf6679;--onac:#fff;--p0b:#e3edfb;--p0f:#46669a;--p1b:#dcf2e6;--p1f:#2f6b52;--p2b:#fde6d8;--p2f:#9a5532;--p3b:#ebe3f8;--p3f:#5b4a8a;--p4b:#fbe1e9;--p4f:#96405c;--p5b:#faefc8;--p5f:#7c6420;color-scheme:light}
  *{animation:none!important;transition:none!important}
  .bar,aside,.form,.acts,.grip,.viewtabs,.ttlrow,.title-ro,#toasts,dialog{display:none!important}
  .app{display:block;padding:0;max-width:none}
@@ -358,11 +389,12 @@ function renderMain(){
   const list=m.querySelector('#steps');
   m.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;try{localStorage.setItem('qt-view',view)}catch(e){}animate=true;render()});
   m.querySelector('#prt').onclick=()=>printFlow(f);
+  const OW=[...new Set(f.steps.map(x=>x.owner||''))];
   if(view==='lane'&&f.steps.length)renderLanes(f,list);
   if(!f.steps.length)list.innerHTML='<div class="empty">Chưa có bước nào.</div>';
   (view==='lane'?[]:f.steps).forEach((s,i)=>{
     if(i)list.insertAdjacentHTML('beforeend','<div class="arrow">↓</div>');
-    const d=document.createElement('div');d.className='step'+(s.id===newId?' pop':'');d.style.setProperty('--i',i);
+    const d=document.createElement('div');d.className='step p'+(OW.indexOf(s.owner||'')%6)+(s.id===newId?' pop':'');d.style.setProperty('--i',i);
     d.innerHTML=`${w?'<span class="grip" title="Kéo để đổi thứ tự">⠿</span>':''}<div class="num">${i+1}</div>
       <div class="body"><div><strong>${esc(s.name)}</strong></div>${s.owner?`<span class="own">${esc(s.owner)}</span>`:''}${s.note?`<div class="note">${esc(s.note)}</div>`:''}${tableHTML(s.table)}
       ${s.img?`<a href="${imgUrl(s.img)}" target="_blank" rel="noopener"><img class="pic" onload="this.classList.add('ok')" loading="lazy" src="${imgUrl(s.img)}" alt="${esc(s.name)}"></a>`:''}</div>
@@ -570,12 +602,12 @@ function renderLanes(f,host){
   f.steps.forEach(s=>{const o=s.owner||NO;if(!owners.includes(o))owners.push(o)});
   const n=f.steps.length,wrap=document.createElement('div'),g=document.createElement('div');
   wrap.className='lanes-wrap';g.className='lanes';g.style.gridTemplateColumns=`150px repeat(${n},minmax(140px,1fr))`;g.style.setProperty('--n',n);
-  owners.forEach(o=>{
-    const lb=document.createElement('div');lb.className='lane-label';lb.textContent=o;g.appendChild(lb);
+  owners.forEach((o,oi)=>{
+    const pc='p'+(oi%6),lb=document.createElement('div');lb.className='lane-label '+pc;lb.textContent=o;g.appendChild(lb);
     f.steps.forEach((s,i)=>{
-      const c=document.createElement('div');c.className='lane-cell';
+      const c=document.createElement('div');c.className='lane-cell '+pc;
       if((s.owner||NO)===o){
-        const k=document.createElement('div');k.className='lane-card';k.dataset.i=i;
+        const k=document.createElement('div');k.className='lane-card '+pc;k.dataset.i=i;
         k.innerHTML=`<span class="num">${i+1}</span><span>${esc(s.name)}</span>`;if(s.note)k.title=s.note;c.appendChild(k);
       }
       g.appendChild(c);
@@ -588,7 +620,7 @@ function drawArrows(wrap){
   const cards=[...wrap.querySelectorAll('.lane-card')].sort((a,b)=>a.dataset.i-b.dataset.i);if(cards.length<2)return;
   const wr=wrap.getBoundingClientRect(),NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');
   svg.setAttribute('class','lane-svg');svg.setAttribute('width',wrap.scrollWidth);svg.setAttribute('height',wrap.scrollHeight);
-  svg.innerHTML='<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--ac)"/></marker></defs>';
+  svg.innerHTML='<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--mu)"/></marker></defs>';
   for(let i=0;i<cards.length-1;i++){
     const a=cards[i].getBoundingClientRect(),b=cards[i+1].getBoundingClientRect();
     const x1=a.right-wr.left+wrap.scrollLeft,y1=a.top+a.height/2-wr.top+wrap.scrollTop,x2=b.left-wr.left+wrap.scrollLeft,y2=b.top+b.height/2-wr.top+wrap.scrollTop,mx=(x1+x2)/2;
