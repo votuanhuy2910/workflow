@@ -93,7 +93,7 @@ dialog[open]::backdrop{animation:fade .22s ease}
 .ghost{position:fixed;z-index:200;pointer-events:none;opacity:.92;box-shadow:0 10px 30px rgba(0,0,0,.3);margin:0;background:var(--card)}
 .hrow{padding:8px 0;border-bottom:1px solid var(--bd);display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
 .hrow ul{margin:4px 0 0;padding-left:18px;color:var(--mu);font-size:13px}
-#hlist{max-height:55vh;overflow:auto}
+#hlist{max-height:62vh;overflow:auto}
 .pfix .lanes{width:1000px;min-width:0;grid-template-columns:110px repeat(var(--n),minmax(0,1fr))!important}
 :root{--bg:#faf8f5;--card:#fff;--tx:#3a3f4b;--mu:#8b909c;--bd:#ece8e1;--ac:#6b8cc7;--acs:#edf2fb;--dg:#cf6679;--onac:#fff;--sh:0 1px 2px rgba(58,63,75,.04),0 10px 30px rgba(58,63,75,.06);--p0b:#e3edfb;--p0f:#46669a;--p1b:#dcf2e6;--p1f:#2f6b52;--p2b:#fde6d8;--p2f:#9a5532;--p3b:#ebe3f8;--p3f:#5b4a8a;--p4b:#fbe1e9;--p4f:#96405c;--p5b:#faefc8;--p5f:#7c6420;color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17191f;--card:#20232b;--tx:#e6e8ee;--mu:#9aa0ad;--bd:#32363f;--ac:#9db6e8;--acs:#2a3247;--dg:#f08fa1;--onac:#17191f;--sh:0 0 0 1px rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.28);--p0b:#2a3650;--p0f:#aac4f2;--p1b:#213a30;--p1f:#9fdcc0;--p2b:#443129;--p2f:#f2c3a8;--p3b:#342f4c;--p3f:#cfc1f3;--p4b:#442b35;--p4f:#f2b6c8;--p5b:#3e3720;--p5f:#eedb93;color-scheme:dark}}
@@ -163,6 +163,13 @@ button:hover{background:var(--acs);border-color:transparent}
 .help .tbl td.s{background:var(--acs);box-shadow:inset 0 0 0 2px var(--ac)}
 .help .body{max-height:62vh;overflow:auto;padding-right:4px}
 .help kbd{border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:12px}
+.hrow{padding:12px 0}
+.hrow>div:first-child{flex:1;min-width:0}
+.htitle{font-size:14px}
+.chg{margin-top:10px}
+.chg ul{margin:4px 0 0;padding-left:20px;color:var(--mu);font-size:13px}
+.chg li{margin:2px 0}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--pb);color:var(--pf);margin-right:6px}
 </style>
 </head>
 <body>
@@ -241,7 +248,7 @@ button:hover{background:var(--acs);border-color:transparent}
 </div></dialog>
 <dialog id="histDlg" class="wide"><div class="dlg">
   <h2>Lịch sử thay đổi <button class="ico" data-close>Đóng</button></h2>
-  <div class="mu">Lưu tối đa 50 thay đổi gần nhất. Admin có thể khôi phục lại một phiên bản.</div>
+  <div class="mu">Mỗi dòng ghi rõ ai đã thay đổi gì, giá trị cũ → mới. Lưu tối đa 50 thay đổi gần nhất; Admin có thể khôi phục một phiên bản.</div>
   <div id="hlist"></div>
 </div></dialog>
 <dialog id="cflDlg"><div class="dlg">
@@ -701,6 +708,14 @@ $('usersBtn').onclick=()=>{$('usersDlg').showModal();renderUsers()};
 $('uform').onsubmit=async e=>{e.preventDefault();await saveUser($('nu').value.trim(),$('np').value,$('nr').value,'Thêm người dùng thành công');if(!$('uerr').textContent){$('nu').value=$('np').value=''}};
 
 /* Lịch sử thay đổi */
+const OPL={add:'Thêm',edit:'Sửa',del:'Xóa',move:'Sắp xếp'},OPC={add:'p1',edit:'p0',del:'p4',move:'p5'};
+function headline(h){
+  if(h.note)return h.note;
+  const c=h.changes;if(!c)return(h.summary||[])[0]||'Thay đổi';
+  if(!c.length)return'Không có thay đổi nội dung';
+  const n={};c.forEach(x=>n[x.op]=(n[x.op]||0)+1);
+  return Object.keys(OPL).filter(k=>n[k]).map(k=>OPL[k]+' '+n[k]).join(' · ')+' mục';
+}
 async function renderHist(){
   const box=$('hlist');
   try{
@@ -708,10 +723,27 @@ async function renderHist(){
     if(!history.length)box.innerHTML='<div class="mu">Chưa có thay đổi nào được ghi lại.</div>';
     history.forEach(h=>{
       const d=document.createElement('div');d.className='hrow';
-      const l=document.createElement('div'),t=document.createElement('div'),ul=document.createElement('ul');
-      t.innerHTML='<strong>#'+Number(h.n)+'</strong> · ';t.append(document.createTextNode(fmt(h.at)+' · '+h.by));
-      h.summary.forEach(x=>{const li=document.createElement('li');li.textContent=x;ul.appendChild(li)});
-      l.append(t,ul);d.appendChild(l);
+      const l=document.createElement('div'),t=document.createElement('div'),m=document.createElement('div');
+      t.className='htitle';t.innerHTML='<strong>#'+Number(h.n)+'</strong> · ';
+      const hl=document.createElement('strong');hl.textContent=headline(h);t.appendChild(hl);
+      m.className='mu';m.textContent=fmt(h.at)+' · '+h.by;
+      l.append(t,m);
+      if(h.changes){
+        h.changes.forEach(c=>{
+          const b=document.createElement('div');b.className='chg';
+          const tag=document.createElement('span');tag.className='tag '+(OPC[c.op]||'p0');tag.textContent=OPL[c.op]||'Sửa';
+          const lb=document.createElement('span');
+          lb.textContent=c.scope==='step'?'Bước “'+c.step+'” · quy trình “'+c.flow+'”':(c.flow?'Quy trình “'+c.flow+'”':'Danh sách quy trình');
+          b.append(tag,lb);
+          if(c.details&&c.details.length){const ul=document.createElement('ul');c.details.forEach(x=>{const li=document.createElement('li');li.textContent=x;ul.appendChild(li)});b.appendChild(ul)}
+          l.appendChild(b);
+        });
+        if(!h.changes.length){const e=document.createElement('div');e.className='mu';e.style.marginTop='6px';e.textContent='Không có thay đổi về nội dung.';l.appendChild(e)}
+      }else if(h.summary){
+        const ul=document.createElement('ul');ul.style.cssText='margin:6px 0 0;padding-left:20px;color:var(--mu);font-size:13px';
+        h.summary.forEach(x=>{const li=document.createElement('li');li.textContent=x;ul.appendChild(li)});l.appendChild(ul);
+      }
+      d.appendChild(l);
       if(isAdmin()){
         const b=document.createElement('button');b.className='ico';b.textContent='Khôi phục';
         b.onclick=async()=>{
