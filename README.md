@@ -51,3 +51,6 @@ Mỗi bước có thể kèm 1 hình. Ảnh được nén thành JPEG (tối đa
 - Mỗi quy trình có 2 chế độ xem: Danh sách và Swimlane (mỗi đơn vị phụ trách một hàng).
 - Nút **In / Xuất PDF** in đúng quy trình đang xem; trong hộp thoại in chọn "Lưu dạng PDF".
 - Kéo ⠿ hoạt động bằng cả chuột và cảm ứng.
+
+## Bảng trong từng bước
+Admin/Editor có thể **Chèn bảng** khi thêm hoặc sửa bước: thêm/xóa hàng và cột, gộp ô, tách ô (ô đã gộp thì tách lại, ô thường thì chia theo số cột × hàng), bật/tắt hàng tiêu đề. Mọi người đều xem được bảng; bảng cũng có trong bản in/PDF. Giới hạn 60 hàng × 20 cột, mỗi ô tối đa 500 ký tự.

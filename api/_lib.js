@@ -64,7 +64,7 @@ function diffFlows(a, b) {
     for (const s of f.steps) {
       const p = OS.get(s.id);
       if (!p) out.push('Thêm bước “' + s.name + '” vào ' + t(f));
-      else if (['name', 'owner', 'note', 'img'].some((k) => (p[k] || '') !== (s[k] || ''))) out.push('Sửa bước “' + s.name + '” trong ' + t(f));
+      else if (['name', 'owner', 'note', 'img'].some((k) => (p[k] || '') !== (s[k] || '')) || JSON.stringify(p.table || null) !== JSON.stringify(s.table || null)) out.push('Sửa bước “' + s.name + '” trong ' + t(f));
     }
     for (const s of o.steps) if (!NS.has(s.id)) out.push('Xóa bước “' + s.name + '” khỏi ' + t(f));
     const ro = o.steps.filter((s) => NS.has(s.id)).map((s) => s.id).join();

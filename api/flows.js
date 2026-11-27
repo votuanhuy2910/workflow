@@ -1,6 +1,19 @@
 const { redis, getUser, getVersion, commit } = require('./_lib');
 const str = (v, n) => String(v ?? '').slice(0, n);
 const IMG = /^[a-z0-9]{6,40}$/;
+const span = (v) => Math.min(20, Math.max(1, parseInt(v, 10) || 1));
+// Bảng: { h: có hàng tiêu đề, g: lưới ô [{ t: chữ, cs: gộp cột, rs: gộp hàng, x: ô bị gộp }] }
+function cleanTable(t) {
+  if (!t || !Array.isArray(t.g) || !t.g.length || t.g.length > 60) return null;
+  const C = Array.isArray(t.g[0]) ? t.g[0].length : 0;
+  if (!C || C > 20) return null;
+  const g = [];
+  for (const row of t.g) {
+    if (!Array.isArray(row) || row.length !== C) return null;
+    g.push(row.map((c) => ({ t: str(c && c.t, 500), cs: span(c && c.cs), rs: span(c && c.rs), x: !!(c && c.x) })));
+  }
+  return { h: !!t.h, g };
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -26,6 +39,7 @@ module.exports = async (req, res) => {
         steps: (Array.isArray(f.steps) ? f.steps : []).slice(0, 100).map((s) => ({
           id: str(s.id, 40), name: str(s.name, 200), owner: str(s.owner, 200), note: str(s.note, 2000),
           img: IMG.test(String(s.img || '')) ? String(s.img) : '',
+          table: cleanTable(s.table),
         })),
       }));
       const r = await commit(flows, version, u);

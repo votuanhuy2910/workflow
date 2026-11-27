@@ -108,6 +108,30 @@ dialog[open]::backdrop{animation:fade .22s ease}
  .pic{opacity:1!important;max-height:240px}
  .lanes-wrap{overflow:visible}
 }
+.tbl-wrap{overflow-x:auto;margin-top:8px;max-width:100%}
+.tbl{border-collapse:collapse;width:100%;font-size:13px}
+.tbl th,.tbl td{border:1px solid var(--bd);padding:6px 8px;vertical-align:top;white-space:pre-wrap;min-width:48px;text-align:left}
+.tbl th{background:var(--acs);font-weight:600}
+.te{border:1px dashed var(--bd);border-radius:10px;padding:8px}
+.te-bar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:8px}
+.te-bar .ico{font-size:12px}
+.te-bar input[type=number]{width:52px;padding:3px 6px}
+.te-bar .sep{width:1px;height:20px;background:var(--bd);margin:0 4px}
+.te .tbl-wrap{max-height:50vh;overflow:auto}
+.te .tbl td{cursor:text;outline:none;min-height:30px}
+.te .tbl td.hd{background:var(--acs);font-weight:600}
+.te .tbl td.tsel{background:var(--acs);box-shadow:inset 0 0 0 2px var(--ac)}
+.te .tbl td:focus{box-shadow:inset 0 0 0 2px var(--ac)}
+@media print{.tbl-wrap{overflow:visible}.tbl{break-inside:avoid}}
+.help h3{font-size:14px;margin:14px 0 4px}
+.help p,.help li{font-size:13px;margin:2px 0}
+.help ol,.help ul{margin:4px 0;padding-left:20px}
+.help .ex{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.help .tbl{width:auto}
+.help .tbl td{min-width:34px;text-align:center}
+.help .tbl td.s{background:var(--acs);box-shadow:inset 0 0 0 2px var(--ac)}
+.help .body{max-height:62vh;overflow:auto;padding-right:4px}
+.help kbd{border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:12px}
 </style>
 </head>
 <body>
@@ -151,6 +175,39 @@ dialog[open]::backdrop{animation:fade .22s ease}
   <div class="dg" id="uerr"></div>
 </div></dialog>
 
+<dialog id="helpDlg" class="wide help"><div class="dlg">
+  <h2>Hướng dẫn gộp ô, tách ô <button class="ico" data-close>Đóng</button></h2>
+  <div class="body">
+    <h3>1. Chọn ô</h3>
+    <ul>
+      <li><b>Một ô:</b> bấm vào ô.</li>
+      <li><b>Nhiều ô (máy tính):</b> bấm ô đầu, rồi giữ <kbd>Shift</kbd> và bấm ô cuối. Vùng được chọn sẽ tô màu xanh.</li>
+      <li><b>Nhiều ô (điện thoại):</b> chạm ô đầu, bật nút <b>▭ Chọn vùng</b>, chạm ô cuối, xong thì tắt nút này.</li>
+    </ul>
+    <h3>2. Gộp ô</h3>
+    <ol><li>Chọn từ 2 ô trở lên (cùng hàng, cùng cột hoặc một vùng hình chữ nhật).</li><li>Bấm <b>⊞ Gộp ô</b>. Chữ trong các ô sẽ được nối vào ô gộp.</li></ol>
+    <div class="ex">
+      <table class="tbl"><tr><td class="s">A</td><td class="s">B</td><td>C</td></tr><tr><td>D</td><td>E</td><td>F</td></tr></table>
+      <span>→</span>
+      <table class="tbl"><tr><td colspan="2" class="s">A B</td><td>C</td></tr><tr><td>D</td><td>E</td><td>F</td></tr></table>
+    </div>
+    <h3>3. Tách ô đã gộp</h3>
+    <ol><li>Bấm vào ô đã gộp.</li><li>Bấm <b>⊟ Tách ô</b>. Ô được tách về các ô nhỏ như ban đầu, chữ giữ lại ở ô đầu tiên.</li></ol>
+    <h3>4. Tách một ô thường thành nhiều cột hoặc hàng</h3>
+    <ol><li>Bấm vào ô cần tách.</li><li>Nhập <b>số cột × số hàng</b> ở cạnh nút Tách ô (ví dụ 2 cột × 1 hàng).</li><li>Bấm <b>⊟ Tách ô</b>. Các ô ở hàng hoặc cột khác sẽ tự giãn ra để bảng vẫn thẳng, giống Word.</li></ol>
+    <div class="ex">
+      <table class="tbl"><tr><td class="s">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></table>
+      <span>tách A thành 2 cột →</span>
+      <table class="tbl"><tr><td class="s">A</td><td class="s"></td><td>B</td></tr><tr><td colspan="2">C</td><td>D</td></tr></table>
+    </div>
+    <h3>Mẹo</h3>
+    <ul>
+      <li>Thêm hoặc xóa hàng, cột sẽ áp dụng cho ô (hoặc vùng) đang chọn. Chọn nhiều ô để xóa nhiều hàng, cột cùng lúc.</li>
+      <li>Bảng phải còn ít nhất 1 hàng và 1 cột. Tối đa 60 hàng × 20 cột.</li>
+      <li>Bật <b>Hàng tiêu đề</b> để hàng đầu tiên in đậm, có nền màu.</li>
+    </ul>
+  </div>
+</div></dialog>
 <dialog id="histDlg" class="wide"><div class="dlg">
   <h2>Lịch sử thay đổi <button class="ico" data-close>Đóng</button></h2>
   <div class="mu">Lưu tối đa 50 thay đổi gần nhất. Admin có thể khôi phục lại một phiên bản.</div>
@@ -172,7 +229,7 @@ dialog[open]::backdrop{animation:fade .22s ease}
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let S={sel:null,flows:[]},me=null,editId=null,saveT,form={img:''},animate=true,newId=null,pendMsg='',ver=0,saving=false,again=false,view=(()=>{try{return localStorage.getItem('qt-view')==='lane'?'lane':'list'}catch(e){return'list'}})();
+let S={sel:null,flows:[]},me=null,editId=null,saveT,form={img:'',table:null},animate=true,newId=null,pendMsg='',ver=0,saving=false,again=false,view=(()=>{try{return localStorage.getItem('qt-view')==='lane'?'lane':'list'}catch(e){return'list'}})();
 const api=async(url,opt={})=>{
   const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...opt});
   const d=await r.json().catch(()=>({}));
@@ -184,7 +241,7 @@ const isAdmin=()=>myRole()==='admin';
 const canWrite=()=>['admin','editor'].includes(myRole());
 const cur=()=>S.flows.find(f=>f.id===S.sel);
 const move=(arr,a,b)=>{if(a===b||a<0||b<0||b>=arr.length)return;const [x]=arr.splice(a,1);arr.splice(b,0,x)};
-const resetForm=()=>{editId=null;form.img=''};
+const resetForm=()=>{editId=null;form.img='';form.table=null};
 /* Thông báo (toast), hộp thoại xác nhận và hiệu ứng biến mất */
 function toast(msg,type){
   const box=$('toasts'),t=document.createElement('div'),i=document.createElement('span'),m=document.createElement('span');
@@ -296,6 +353,7 @@ function renderMain(){
     <div class="row"><input id="sn" placeholder="Tên bước *" value="${esc(es?.name)}"><input id="so" placeholder="Đơn vị / người phụ trách" value="${esc(es?.owner)}"></div>
     <textarea id="sd" rows="2" placeholder="Ghi chú, hồ sơ cần có…">${esc(es?.note)}</textarea>
     <div class="imgrow"><label class="btnlike">📷 Chọn hình minh họa<input type="file" id="sf" accept="image/*" hidden></label><span id="imgPrev">${prevHTML()}</span><span class="mu">(không bắt buộc)</span></div>
+    <div id="teHost"></div>
     <div><button class="pri" id="ok">${es?'Lưu thay đổi':'+ Thêm bước'}</button> ${es?'<button id="cx">Hủy</button>':''}</div></div>`:''}`;
   const list=m.querySelector('#steps');
   m.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;try{localStorage.setItem('qt-view',view)}catch(e){}animate=true;render()});
@@ -306,7 +364,7 @@ function renderMain(){
     if(i)list.insertAdjacentHTML('beforeend','<div class="arrow">↓</div>');
     const d=document.createElement('div');d.className='step'+(s.id===newId?' pop':'');d.style.setProperty('--i',i);
     d.innerHTML=`${w?'<span class="grip" title="Kéo để đổi thứ tự">⠿</span>':''}<div class="num">${i+1}</div>
-      <div class="body"><div><strong>${esc(s.name)}</strong></div>${s.owner?`<span class="own">${esc(s.owner)}</span>`:''}${s.note?`<div class="note">${esc(s.note)}</div>`:''}
+      <div class="body"><div><strong>${esc(s.name)}</strong></div>${s.owner?`<span class="own">${esc(s.owner)}</span>`:''}${s.note?`<div class="note">${esc(s.note)}</div>`:''}${tableHTML(s.table)}
       ${s.img?`<a href="${imgUrl(s.img)}" target="_blank" rel="noopener"><img class="pic" onload="this.classList.add('ok')" loading="lazy" src="${imgUrl(s.img)}" alt="${esc(s.name)}"></a>`:''}</div>
       ${w?`<div class="acts"><button class="ico" data-a="up">▲</button><button class="ico" data-a="dn">▼</button><button class="ico" data-a="ed">Sửa</button>
       <button class="ico dg" data-a="del">Xóa</button></div>`:''}`;
@@ -317,7 +375,7 @@ function renderMain(){
         await fadeOut(d);f.steps.splice(i,1);if(editId===s.id)resetForm();persist('Xóa thành công');render();return;
       }
       if(a==='up'||a==='dn'){const j=a==='up'?i-1:i+1;if(j<0||j>=f.steps.length)return;move(f.steps,i,j);persist('Lưu thành công')}
-      if(a==='ed'){editId=s.id;form.img=s.img||''}
+      if(a==='ed'){editId=s.id;form.img=s.img||'';form.table=s.table?JSON.parse(JSON.stringify(s.table)):null}
       render();
     });
     dnd(d,f.steps,i,()=>{persist();render()});list.appendChild(d);
@@ -331,6 +389,7 @@ function renderMain(){
   };
   if(q('#cx'))q('#cx').onclick=()=>{resetForm();render()};
   if(!q('#ok'))return;
+  renderTE(q('#teHost'));
   const setPrev=()=>{q('#imgPrev').innerHTML=prevHTML();const r=q('#rmImg');if(r)r.onclick=()=>{form.img='';setPrev()}};setPrev();
   q('#sf').onchange=async e=>{
     const file=e.target.files[0];if(!file)return;
@@ -341,12 +400,169 @@ function renderMain(){
   };
   q('#ok').onclick=()=>{
     const name=q('#sn').value.trim();if(!name){q('#sn').focus();return}
-    const owner=q('#so').value.trim(),note=q('#sd').value.trim(),img=form.img;
+    const owner=q('#so').value.trim(),note=q('#sd').value.trim(),img=form.img,table=form.table||null;
     let msg='Lưu thành công';
-    if(es){Object.assign(es,{name,owner,note,img})}
-    else{const id=uid();newId=id;f.steps.push({id,name,owner,note,img});msg='Thêm bước thành công'}
+    if(es){Object.assign(es,{name,owner,note,img,table})}
+    else{const id=uid();newId=id;f.steps.push({id,name,owner,note,img,table});msg='Thêm bước thành công'}
     resetForm();persist(msg);render();
   };
+}
+/*TBL-START*/
+const cell=()=>({t:'',cs:1,rs:1,x:false});
+const newTable=(R,C)=>({h:true,g:Array.from({length:R},()=>Array.from({length:C},cell))});
+const cloneG=g=>g.map(r=>r.map(c=>({...c})));
+const T=g=>g[0].map((_,c)=>g.map(row=>({t:row[c].t,cs:row[c].rs,rs:row[c].cs,x:row[c].x})));
+function ownerOf(g,r,c){
+  if(!g[r][c].x)return{r,c};
+  for(let rr=r;rr>=0;rr--)for(let cc=c;cc>=0;cc--){const k=g[rr][cc];if(!k.x&&rr+k.rs>r&&cc+k.cs>c)return{r:rr,c:cc}}
+  return{r,c};
+}
+function insRow(g,k){
+  g=cloneG(g);const C=g[0].length,row=[],seen=new Set();
+  for(let c=0;c<C;c++){
+    const o=(k>0&&k<g.length)?ownerOf(g,k,c):null;
+    if(o&&o.r<k){const key=o.r+','+o.c;if(!seen.has(key)){seen.add(key);g[o.r][o.c].rs++}row.push({t:'',cs:1,rs:1,x:true})}
+    else row.push(cell());
+  }
+  g.splice(k,0,row);return g;
+}
+function delRow(g,k){
+  g=cloneG(g);if(g.length<=1)return g;
+  const C=g[0].length,seen=new Set();
+  for(let c=0;c<C;c++){
+    const o=ownerOf(g,k,c),key=o.r+','+o.c;if(seen.has(key))continue;seen.add(key);
+    const k0=g[o.r][o.c];
+    if(k0.rs>1){
+      if(o.r===k){const nx=g[k+1][o.c];nx.t=k0.t;nx.cs=k0.cs;nx.rs=k0.rs-1;nx.x=false}
+      else k0.rs--;
+    }
+  }
+  g.splice(k,1);return g;
+}
+const insCol=(g,k)=>T(insRow(T(g),k));
+const delCol=(g,k)=>T(delRow(T(g),k));
+function rectOf(g,sel){
+  let r1=Math.min(sel.a.r,sel.b.r),r2=Math.max(sel.a.r,sel.b.r),c1=Math.min(sel.a.c,sel.b.c),c2=Math.max(sel.a.c,sel.b.c),ch=true;
+  while(ch){ch=false;
+    for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){
+      const o=ownerOf(g,r,c),k=g[o.r][o.c];
+      const a=Math.min(r1,o.r),b=Math.min(c1,o.c),d=Math.max(r2,o.r+k.rs-1),e=Math.max(c2,o.c+k.cs-1);
+      if(a!==r1||b!==c1||d!==r2||e!==c2){r1=a;c1=b;r2=d;c2=e;ch=true}
+    }
+  }
+  return{r1,c1,r2,c2};
+}
+function mergeSel(g,sel){
+  g=cloneG(g);const{r1,c1,r2,c2}=rectOf(g,sel);if(r1===r2&&c1===c2)return g;
+  const txt=[];
+  for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){const k=g[r][c];if(!k.x&&k.t.trim())txt.push(k.t.trim())}
+  for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)g[r][c]={t:'',cs:1,rs:1,x:true};
+  g[r1][c1]={t:txt.join(' '),cs:c2-c1+1,rs:r2-r1+1,x:false};return g;
+}
+function unmerge(g,r,c){
+  g=cloneG(g);const o=ownerOf(g,r,c),k=g[o.r][o.c];
+  for(let rr=o.r;rr<o.r+k.rs;rr++)for(let cc=o.c;cc<o.c+k.cs;cc++)if(rr!==o.r||cc!==o.c)g[rr][cc]=cell();
+  k.cs=1;k.rs=1;return g;
+}
+// Tách ô thành n cột: chèn n-1 cột sau cột c. Hàng r0..r0+h-1 nhận ô mới; các hàng khác được kéo rộng ô sẵn có (giống Word)
+function splitCols(g,r0,h,c,n){
+  g=cloneG(g);const add=n-1,seen=new Set();
+  for(let r=0;r<g.length;r++){
+    const news=[];
+    if(r>=r0&&r<r0+h){for(let i=0;i<add;i++)news.push(cell())}
+    else{
+      const o=ownerOf(g,r,c),key=o.r+','+o.c;
+      if(!seen.has(key)){seen.add(key);g[o.r][o.c].cs+=add}
+      for(let i=0;i<add;i++)news.push({t:'',cs:1,rs:1,x:true});
+    }
+    g[r].splice(c+1,0,...news);
+  }
+  return g;
+}
+const splitRows=(g,r,c0,w,m)=>T(splitCols(T(g),c0,w,r,m));
+/*TBL-END*/
+const clampSel=g=>{const R=g.length,C=g[0].length,f=p=>({r:Math.min(Math.max(p.r,0),R-1),c:Math.min(Math.max(p.c,0),C-1)});return{a:f(tsel.a),b:f(tsel.b)}};
+let tsel={a:{r:0,c:0},b:{r:0,c:0}},tExt=false,teHost=null;
+function tableHTML(t){
+  if(!t||!Array.isArray(t.g)||!t.g.length)return'';
+  return'<div class="tbl-wrap"><table class="tbl">'+t.g.map((row,r)=>'<tr>'+row.map(c=>{
+    if(c.x)return'';const tg=t.h&&r===0?'th':'td';
+    return`<${tg} colspan="${Number(c.cs)||1}" rowspan="${Number(c.rs)||1}">${esc(c.t)}</${tg}>`;
+  }).join('')+'</tr>').join('')+'</table></div>';
+}
+function paintSel(){
+  if(!form.table)return;const g=form.table.g,{r1,c1,r2,c2}=rectOf(g,clampSel(g));
+  document.querySelectorAll('#teTbl td').forEach(td=>{
+    const r=+td.dataset.r,c=+td.dataset.c,k=g[r][c];
+    td.classList.toggle('tsel',r<=r2&&r+k.rs-1>=r1&&c<=c2&&c+k.cs-1>=c1);
+  });
+}
+function renderTE(host){
+  teHost=host||teHost;const h=teHost;if(!h)return;h.innerHTML='';
+  if(!form.table){
+    h.innerHTML='<div class="imgrow"><button type="button" class="ico" id="tIns">▦ Chèn bảng</button><input type="number" id="tr" min="1" max="30" value="3" style="width:60px"> hàng × <input type="number" id="tc" min="1" max="12" value="3" style="width:60px"> cột <button type="button" class="ico" id="tHelp">❓ Hướng dẫn bảng</button> <span class="mu">(không bắt buộc)</span></div>';
+    h.querySelector('#tIns').onclick=()=>{
+      const n=(id,mx)=>Math.min(mx,Math.max(1,+h.querySelector(id).value||3));
+      form.table=newTable(n('#tr',30),n('#tc',12));tsel={a:{r:0,c:0},b:{r:0,c:0}};renderTE();
+    };
+    h.querySelector('#tHelp').onclick=()=>$('helpDlg').showModal();
+    return;
+  }
+  const t=form.table,g=t.g;
+  h.innerHTML=`<div class="te"><div class="te-bar">
+    <button type="button" class="ico" data-o="rowUp" title="Thêm hàng phía trên ô đang chọn">Hàng ↑</button><button type="button" class="ico" data-o="rowDn" title="Thêm hàng phía dưới">Hàng ↓</button><button type="button" class="ico dg" data-o="rowDel" title="Xóa hàng đang chọn">Xóa hàng</button><span class="sep"></span>
+    <button type="button" class="ico" data-o="colL" title="Thêm cột bên trái">Cột ←</button><button type="button" class="ico" data-o="colR" title="Thêm cột bên phải">Cột →</button><button type="button" class="ico dg" data-o="colDel" title="Xóa cột đang chọn">Xóa cột</button><span class="sep"></span>
+    <button type="button" class="ico" data-o="merge" title="Gộp các ô đang chọn">⊞ Gộp ô</button>
+    <button type="button" class="ico" data-o="split" title="Tách ô: ô đã gộp sẽ được tách lại; ô thường sẽ chia theo số cột × hàng">⊟ Tách ô</button>
+    <input type="number" id="sc" min="1" max="6" value="2" title="Số cột"> cột × <input type="number" id="sr" min="1" max="6" value="1" title="Số hàng"> hàng<span class="sep"></span>
+    <label><input type="checkbox" id="th" style="width:auto" ${t.h?'checked':''}> Hàng tiêu đề</label>
+    <button type="button" class="ico${tExt?' pri':''}" data-o="ext" title="Bật rồi chạm ô cuối của vùng cần chọn (dành cho điện thoại)">▭ Chọn vùng</button>
+    <button type="button" class="ico" data-o="help" title="Xem hướng dẫn gộp ô, tách ô">❓ Hướng dẫn</button><button type="button" class="ico dg" data-o="del">Xóa bảng</button></div>
+    <div class="mu" style="margin-bottom:6px">Bấm vào ô để nhập. Giữ Shift + bấm (hoặc dùng “Chọn vùng” trên điện thoại) để chọn nhiều ô rồi gộp.</div>
+    <div class="tbl-wrap"><table class="tbl" id="teTbl"></table></div></div>`;
+  const tb=h.querySelector('#teTbl');
+  g.forEach((row,r)=>{
+    const tr=document.createElement('tr');
+    row.forEach((k,c)=>{
+      if(k.x)return;
+      const td=document.createElement('td');td.contentEditable='true';td.dataset.r=r;td.dataset.c=c;
+      td.colSpan=k.cs;td.rowSpan=k.rs;td.textContent=k.t;if(t.h&&r===0)td.className='hd';
+      td.oninput=()=>{k.t=td.innerText.replace(/\n$/,'')};
+      td.onpaste=e=>{e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))};
+      td.onfocus=()=>{tsel={a:{r,c},b:{r,c}};paintSel()};
+      const pick=e=>{if(e.shiftKey||tExt){e.preventDefault();tsel={a:tsel.a,b:{r,c}};paintSel()}};
+      td.onpointerdown=pick;td.onmousedown=pick;
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  h.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>teOp(b.dataset.o));
+  h.querySelector('#th').onchange=e=>{t.h=e.target.checked;renderTE()};
+  paintSel();
+}
+function teOp(o){
+  const t=form.table,g0=t.g,sel=clampSel(g0),{r1,c1,r2,c2}=rectOf(g0,sel),R=g0.length,C=g0[0].length;let g=g0,ns=null;
+  const num=(id,d)=>Math.min(6,Math.max(1,+teHost.querySelector(id).value||d));
+  if(o==='rowUp'||o==='rowDn'){if(R>=60)return toast('Bảng tối đa 60 hàng','err');const k=o==='rowUp'?r1:r2+1;g=insRow(g0,k);ns={r:k,c:c1}}
+  else if(o==='colL'||o==='colR'){if(C>=20)return toast('Bảng tối đa 20 cột','err');const k=o==='colL'?c1:c2+1;g=insCol(g0,k);ns={r:r1,c:k}}
+  else if(o==='rowDel'){if(r2-r1+1>=R)return toast('Bảng phải còn ít nhất 1 hàng','err');for(let r=r2;r>=r1;r--)g=delRow(g,r);ns={r:Math.min(r1,g.length-1),c:c1}}
+  else if(o==='colDel'){if(c2-c1+1>=C)return toast('Bảng phải còn ít nhất 1 cột','err');for(let c=c2;c>=c1;c--)g=delCol(g,c);ns={r:r1,c:Math.min(c1,g[0].length-1)}}
+  else if(o==='merge'){if(r1===r2&&c1===c2)return toast('Hãy chọn từ 2 ô trở lên (giữ Shift + bấm)','info');g=mergeSel(g0,sel);ns={r:r1,c:c1}}
+  else if(o==='split'){
+    const ow=ownerOf(g0,r1,c1),k=g0[ow.r][ow.c];
+    if(k.cs>1||k.rs>1)g=unmerge(g0,ow.r,ow.c);
+    else{
+      const n=num('#sc',2),m=num('#sr',1);
+      if(n*m<=1)return toast('Nhập số cột hoặc số hàng lớn hơn 1','info');
+      if(C+n-1>20||R+m-1>60)return toast('Bảng vượt quá giới hạn 60 hàng × 20 cột','err');
+      if(n>1)g=splitCols(g,ow.r,1,ow.c,n);if(m>1)g=splitRows(g,ow.r,ow.c,n,m);
+    }
+    ns={r:ow.r,c:ow.c};
+  }
+  else if(o==='help'){$('helpDlg').showModal();return}
+  else if(o==='ext'){tExt=!tExt;return renderTE()}
+  else if(o==='del'){confirmBox('Bạn có muốn xóa bảng này?').then(y=>{if(y){form.table=null;renderTE()}});return}
+  t.g=g;tsel={a:ns,b:ns};renderTE();
 }
 /* Swimlane: mỗi đơn vị phụ trách một hàng, mỗi bước một cột */
 function renderLanes(f,host){
